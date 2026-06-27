@@ -50,23 +50,41 @@
 
   --gradient-blush: linear-gradient(135deg, oklch(0.96 0.025 20), oklch(0.92 0.04 15));
   --gradient-cream: linear-gradient(180deg, oklch(0.985 0.008 70), oklch(0.96 0.018 30));
-  --gradient-overlay: linear-gradient(180deg, transparent 40%, color-mix(in oklab, var(--cocoa) 50%, transparent) 100%);
+  --gradient-overlay: linear-gradient(
+    180deg,
+    transparent 40%,
+    color-mix(in oklab, var(--cocoa) 50%, transparent) 100%
+  );
 
   --animate-marquee: marquee 30s linear infinite;
   --animate-fade-up: fade-up 0.6s ease-out;
   --animate-slide-in: slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
   @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
   }
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes slide-in {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
 }
 
@@ -151,23 +169,45 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6, .font-serif {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-serif {
     font-family: var(--font-serif);
     letter-spacing: -0.01em;
   }
 }
 
 @layer utilities {
-  .shadow-soft { box-shadow: var(--shadow-soft); }
-  .shadow-elegant { box-shadow: var(--shadow-elegant); }
-  .shadow-blush { box-shadow: var(--shadow-blush); }
-  .bg-gradient-blush { background-image: var(--gradient-blush); }
-  .bg-gradient-cream { background-image: var(--gradient-cream); }
-  .bg-gradient-overlay { background-image: var(--gradient-overlay); }
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+  .shadow-blush {
+    box-shadow: var(--shadow-blush);
+  }
+  .bg-gradient-blush {
+    background-image: var(--gradient-blush);
+  }
+  .bg-gradient-cream {
+    background-image: var(--gradient-cream);
+  }
+  .bg-gradient-overlay {
+    background-image: var(--gradient-overlay);
+  }
 
   @keyframes marquee-ltr {
-    0%   { transform: translateX(-50%); }
-    100% { transform: translateX(0%); }
+    0% {
+      transform: translateX(-50%);
+    }
+    100% {
+      transform: translateX(0%);
+    }
   }
   .animate-marquee {
     animation: marquee-ltr 70s linear infinite;
@@ -175,13 +215,21 @@
   }
 
   @keyframes loading-bar {
-    0%   { transform: translateX(-100%); }
-    100% { transform: translateX(400%); }
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(400%);
+    }
   }
 
   @keyframes shimmer {
-    0%   { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
+    0% {
+      background-position: -400px 0;
+    }
+    100% {
+      background-position: 400px 0;
+    }
   }
   .skeleton {
     background: linear-gradient(

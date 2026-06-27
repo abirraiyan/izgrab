@@ -1,31 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { useCms } from "@/lib/cms-store";
 import { useState } from "react";
-
-export const Route = createFileRoute("/shop")({
-  head: () => ({
-    meta: [
-      { title: "Shop Cafe Menu — IZ Patisserie" },
-      { name: "description", content: "Browse IZ Patisserie & Cafe coffee, croissants, cakes, desserts and hearty meals." },
-      { property: "og:title", content: "Shop — IZ Patisserie" },
-      { property: "og:description", content: "Quality coffee, croissants, cakes, desserts and comfort meals." },
-    ],
-  }),
-  component: Shop,
-});
+import { SEO } from "@/components/seo";
 
 const filters = ["All", "Coffee", "Croissants", "Cakes", "Desserts", "Meals"];
 
-function Shop() {
+export default function Shop() {
   const { products } = useCms();
   const [filter, setFilter] = useState("All");
   const filtered = filter === "All" ? products : products.filter((p) => p.category === filter);
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Shop Cafe Menu — IZ Patisserie"
+        description="Browse IZ Patisserie & Cafe coffee, croissants, cakes, desserts and hearty meals."
+      />
       <Navbar />
       <section className="container mx-auto px-4 sm:px-6 pt-12 pb-8 sm:pt-20">
         <p className="text-xs tracking-[0.3em] uppercase text-rose-gold mb-4">The Collection</p>
@@ -33,7 +25,8 @@ function Shop() {
           Coffee, desserts and café favourites.
         </h1>
         <p className="mt-5 text-foreground/70 max-w-xl">
-          Browse signature coffee, croissants, chilled desserts and comforting meals from IZ Patisserie & Cafe.
+          Browse signature coffee, croissants, chilled desserts and comforting meals from IZ
+          Patisserie & Cafe.
         </p>
       </section>
 

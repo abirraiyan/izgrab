@@ -1,13 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { cmsStore, fileToDataUrl, useCms } from "@/lib/cms-store";
 import type { Product } from "@/lib/products";
-
-export const Route = createFileRoute("/admin/products")({
-  component: ProductsAdmin,
-});
 
 const emptyProduct: Product = {
   slug: "",
@@ -28,7 +23,7 @@ const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
 const categoryOptions = ["Coffee", "Croissants", "Cakes", "Desserts", "Meals", "Gift Boxes"];
 const tagOptions = ["", "Best Seller", "Limited", "New"] as const;
 
-function ProductsAdmin() {
+export default function ProductsAdmin() {
   const { products } = useCms();
   const [editing, setEditing] = useState<Product | null>(null);
 
@@ -68,11 +63,7 @@ function ProductsAdmin() {
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden">
                         {p.image && (
-                          <img
-                            src={p.image}
-                            alt={p.name}
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                         )}
                       </div>
                       <div>
@@ -207,10 +198,7 @@ function ProductDrawer({
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-cocoa/40" onClick={onClose} />
-      <form
-        onSubmit={submit}
-        className="w-full max-w-xl bg-background h-full overflow-y-auto"
-      >
+      <form onSubmit={submit} className="w-full max-w-xl bg-background h-full overflow-y-auto">
         <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <h3 className="font-serif text-xl text-cocoa">
             {product.slug.startsWith("new-") ? "New product" : "Edit product"}
@@ -250,9 +238,18 @@ function ProductDrawer({
             <div className="flex items-center gap-4">
               <div className="w-24 h-24 rounded-xl bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center">
                 {draft.video ? (
-                  <video src={draft.video} muted loop playsInline autoPlay className="w-full h-full object-cover" />
+                  <video
+                    src={draft.video}
+                    muted
+                    loop
+                    playsInline
+                    autoPlay
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <span className="text-[10px] text-muted-foreground text-center px-1">No video</span>
+                  <span className="text-[10px] text-muted-foreground text-center px-1">
+                    No video
+                  </span>
                 )}
               </div>
               <div className="space-y-2 flex-1">
@@ -266,7 +263,7 @@ function ProductDrawer({
                   <input
                     type="url"
                     placeholder="…or paste video URL (.mp4 / .webm)"
-                    value={draft.video?.startsWith("data:") ? "" : draft.video ?? ""}
+                    value={draft.video?.startsWith("data:") ? "" : (draft.video ?? "")}
                     onChange={(e) => update("video", e.target.value)}
                     className={inputCls}
                   />
@@ -325,9 +322,7 @@ function ProductDrawer({
             <Field label="Tag">
               <select
                 value={draft.tag ?? ""}
-                onChange={(e) =>
-                  update("tag", (e.target.value || undefined) as Product["tag"])
-                }
+                onChange={(e) => update("tag", (e.target.value || undefined) as Product["tag"])}
                 className={inputCls}
               >
                 {tagOptions.map((t) => (
@@ -368,7 +363,7 @@ function ProductDrawer({
                   )
                 }
                 className={inputCls}
-                placeholder='6 inch, 8 inch'
+                placeholder="6 inch, 8 inch"
               />
             </Field>
             <Field label="Flavors (comma-separated)">

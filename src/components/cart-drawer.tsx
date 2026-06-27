@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
 import { cartStore, useCart, itemKey } from "@/lib/cart-store";
 
@@ -92,7 +92,9 @@ export function CartDrawer() {
                             <Plus className="w-3 h-3" />
                           </button>
                         </div>
-                        <span className="font-medium text-cocoa">৳{(i.price * i.qty).toLocaleString()}</span>
+                        <span className="font-medium text-cocoa">
+                          ৳{(i.price * i.qty).toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </li>
@@ -108,7 +110,9 @@ export function CartDrawer() {
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-medium text-cocoa">৳{subtotal.toLocaleString()}</span>
             </div>
-            <p className="text-xs text-muted-foreground">Delivery & taxes calculated at checkout.</p>
+            <p className="text-xs text-muted-foreground">
+              Delivery & taxes calculated at checkout.
+            </p>
             <Link
               to="/checkout"
               onClick={() => cartStore.setOpen(false)}

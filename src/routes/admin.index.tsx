@@ -1,17 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useCms } from "@/lib/cms-store";
 import { Package, Images, ShoppingCart, TrendingUp } from "lucide-react";
 
-export const Route = createFileRoute("/admin/")({
-  component: Overview,
-});
-
-function Overview() {
+export default function Overview() {
   const { products, slides, orders } = useCms();
   const newOrders = orders.filter((o) => o.status === "new");
-  const revenue = orders
-    .filter((o) => o.status !== "cancelled")
-    .reduce((a, b) => a + b.total, 0);
+  const revenue = orders.filter((o) => o.status !== "cancelled").reduce((a, b) => a + b.total, 0);
 
   const stats = [
     { label: "Products", value: products.length, icon: Package, to: "/admin/products" },
@@ -47,9 +41,7 @@ function Overview() {
             className="bg-card border border-border rounded-2xl p-5 hover:shadow-soft transition"
           >
             <div className="flex items-center justify-between">
-              <p className="text-xs tracking-wide uppercase text-muted-foreground">
-                {label}
-              </p>
+              <p className="text-xs tracking-wide uppercase text-muted-foreground">{label}</p>
               <Icon className="w-4 h-4 text-rose-gold" />
             </div>
             <p className="font-serif text-3xl text-cocoa mt-3">{value}</p>
@@ -72,17 +64,12 @@ function Overview() {
                       {new Date(o.createdAt).toLocaleString()} · {o.items.length} item(s)
                     </p>
                   </div>
-                  <span className="text-cocoa font-medium">
-                    ৳{o.total.toLocaleString()}
-                  </span>
+                  <span className="text-cocoa font-medium">৳{o.total.toLocaleString()}</span>
                 </li>
               ))}
             </ul>
           )}
-          <Link
-            to="/admin/orders"
-            className="inline-block mt-4 text-xs text-cocoa underline"
-          >
+          <Link to="/admin/orders" className="inline-block mt-4 text-xs text-cocoa underline">
             View all orders →
           </Link>
         </div>

@@ -4,7 +4,7 @@ export async function isAdmin() {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  
+
   if (!session?.user?.email) return false;
 
   const { data: admin, error } = await supabase

@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { Instagram, Facebook, Mail, ArrowRight, Sparkle } from "lucide-react";
 import izLogo from "@/assets/iz-logo.webp";
 import { useCms } from "@/lib/cms-store";
@@ -44,25 +44,59 @@ export function Footer() {
         <div>
           <h4 className="text-[11px] tracking-[0.22em] uppercase text-cocoa/60 mb-4">Experience</h4>
           <ul className="space-y-2.5 text-sm text-foreground/75">
-            <li><Link to="/shop" className="hover:text-cocoa">Shop All</Link></li>
-            <li><Link to="/shop" className="hover:text-cocoa">Seasonal Menu</Link></li>
-            <li><Link to="/about" className="hover:text-cocoa">Our Story</Link></li>
-            <li><a href="#" className="hover:text-cocoa">The Gallery</a></li>
+            <li>
+              <Link to="/shop" className="hover:text-cocoa">
+                Shop All
+              </Link>
+            </li>
+            <li>
+              <Link to="/shop" className="hover:text-cocoa">
+                Seasonal Menu
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-cocoa">
+                Our Story
+              </Link>
+            </li>
+            <li>
+              <a href="#" className="hover:text-cocoa">
+                The Gallery
+              </a>
+            </li>
           </ul>
         </div>
 
         <div>
           <h4 className="text-[11px] tracking-[0.22em] uppercase text-cocoa/60 mb-4">Support</h4>
           <ul className="space-y-2.5 text-sm text-foreground/75">
-            <li><a href="#" className="hover:text-cocoa">Shipping & Returns</a></li>
-            <li><a href="#" className="hover:text-cocoa">Wholesale</a></li>
-            <li><Link to="/contact" className="hover:text-cocoa">Contact Us</Link></li>
-            <li><a href="#" className="hover:text-cocoa">Privacy Policy</a></li>
+            <li>
+              <a href="#" className="hover:text-cocoa">
+                Shipping & Returns
+              </a>
+            </li>
+            <li>
+              <a href="#" className="hover:text-cocoa">
+                Wholesale
+              </a>
+            </li>
+            <li>
+              <Link to="/contact" className="hover:text-cocoa">
+                Contact Us
+              </Link>
+            </li>
+            <li>
+              <a href="#" className="hover:text-cocoa">
+                Privacy Policy
+              </a>
+            </li>
           </ul>
         </div>
 
         <div>
-          <h4 className="text-[11px] tracking-[0.22em] uppercase text-cocoa/60 mb-4">Stay Inspired</h4>
+          <h4 className="text-[11px] tracking-[0.22em] uppercase text-cocoa/60 mb-4">
+            Stay Inspired
+          </h4>
           <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
             Join our mailing list for secret drops and seasonal previews.
           </p>
@@ -84,7 +118,9 @@ export function Footer() {
       <div className="border-t border-border">
         <div className="container mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-muted-foreground">
           <p className="flex items-center gap-1.5">
-            <span>© {new Date().getFullYear()} IZ Patisserie & Cafe. Crafted with skill and visuals.</span>
+            <span>
+              © {new Date().getFullYear()} IZ Patisserie & Cafe. Crafted with skill and visuals.
+            </span>
             <Link
               to="/admin"
               aria-label="Admin panel"
@@ -95,9 +131,15 @@ export function Footer() {
             </Link>
           </p>
           <div className="flex gap-5 tracking-[0.2em] uppercase">
-            <a href="#" className="hover:text-cocoa">Twitter</a>
-            <a href="#" className="hover:text-cocoa">Instagram</a>
-            <a href="#" className="hover:text-cocoa">Pinterest</a>
+            <a href="#" className="hover:text-cocoa">
+              Twitter
+            </a>
+            <a href="#" className="hover:text-cocoa">
+              Instagram
+            </a>
+            <a href="#" className="hover:text-cocoa">
+              Pinterest
+            </a>
           </div>
         </div>
       </div>

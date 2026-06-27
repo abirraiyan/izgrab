@@ -1,12 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { cmsStore, useCms, type Order } from "@/lib/cms-store";
-
-export const Route = createFileRoute("/admin/orders")({
-  component: OrdersAdmin,
-});
 
 const statusStyles: Record<Order["status"], string> = {
   new: "bg-rose-gold/30 text-cocoa",
@@ -17,7 +12,7 @@ const statusStyles: Record<Order["status"], string> = {
 
 const statusOptions: Order["status"][] = ["new", "preparing", "delivered", "cancelled"];
 
-function OrdersAdmin() {
+export default function OrdersAdmin() {
   const { orders } = useCms();
   const [filter, setFilter] = useState<Order["status"] | "all">("all");
   const [open, setOpen] = useState<Order | null>(null);
@@ -135,9 +130,7 @@ function OrderDrawer({ order, onClose }: { order: Order; onClose: () => void }) 
       <div className="w-full max-w-md bg-background h-full overflow-y-auto">
         <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground">
-              Order #{order.id.slice(-6)}
-            </p>
+            <p className="text-xs text-muted-foreground">Order #{order.id.slice(-6)}</p>
             <h3 className="font-serif text-xl text-cocoa">{order.name}</h3>
           </div>
           <button onClick={onClose}>✕</button>
@@ -145,9 +138,7 @@ function OrderDrawer({ order, onClose }: { order: Order; onClose: () => void }) 
 
         <div className="p-6 space-y-6 text-sm">
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
-              Status
-            </p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Status</p>
             <select
               value={order.status}
               onChange={(e) => {
@@ -175,9 +166,7 @@ function OrderDrawer({ order, onClose }: { order: Order; onClose: () => void }) 
               {order.area}, {order.city}
             </p>
             {order.notes && (
-              <p className="mt-2 italic text-xs text-muted-foreground">
-                Note: {order.notes}
-              </p>
+              <p className="mt-2 italic text-xs text-muted-foreground">Note: {order.notes}</p>
             )}
           </Section>
 
@@ -200,11 +189,7 @@ function OrderDrawer({ order, onClose }: { order: Order; onClose: () => void }) 
           <div className="border-t border-border pt-4 space-y-1">
             <Row label="Subtotal" value={`৳${order.subtotal.toLocaleString()}`} />
             <Row label="Delivery" value={`৳${order.delivery.toLocaleString()}`} />
-            <Row
-              label="Total"
-              value={`৳${order.total.toLocaleString()}`}
-              bold
-            />
+            <Row label="Total" value={`৳${order.total.toLocaleString()}`} bold />
             <Row label="Payment" value={order.payment.toUpperCase()} />
           </div>
         </div>
@@ -216,23 +201,13 @@ function OrderDrawer({ order, onClose }: { order: Order; onClose: () => void }) 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
-        {title}
-      </p>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{title}</p>
       <div className="text-sm">{children}</div>
     </div>
   );
 }
 
-function Row({
-  label,
-  value,
-  bold,
-}: {
-  label: string;
-  value: string;
-  bold?: boolean;
-}) {
+function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className={`flex justify-between ${bold ? "text-cocoa font-medium text-base" : ""}`}>
       <span className="text-muted-foreground">{label}</span>

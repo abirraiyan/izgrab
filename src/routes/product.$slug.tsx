@@ -1,48 +1,43 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Minus, Plus, Truck, Leaf, Heart, ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
-import { cmsStore, useCms } from "@/lib/cms-store";
+import { useCms } from "@/lib/cms-store";
 import { cartStore } from "@/lib/cart-store";
+import { SEO } from "@/components/seo";
 
-export const Route = createFileRoute("/product/$slug")({
-  loader: ({ params }) => {
-    const product = cmsStore.getSnapshot().products.find((p) => p.slug === params.slug);
-    if (!product) throw notFound();
-    return { product };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.product.name} — IZ Patisserie` },
-          { name: "description", content: loaderData.product.description },
-          { property: "og:title", content: loaderData.product.name },
-          { property: "og:description", content: loaderData.product.description },
-          { property: "og:image", content: loaderData.product.image },
-        ]
-      : [],
-  }),
-  notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <p className="font-serif text-3xl text-cocoa mb-3">Dessert not found</p>
-        <Link to="/shop" className="text-cocoa underline">Back to shop</Link>
-      </div>
-    </div>
-  ),
-  component: ProductPage,
-});
-
-function ProductPage() {
-  const { product: initial } = Route.useLoaderData();
+export default function ProductPage() {
+  const { slug } = useParams<{ slug: string }>();
   const { products } = useCms();
-  const product = products.find((p) => p.slug === initial.slug) ?? initial;
-  const [size, setSize] = useState(product.sizes[0]);
-  const [flavor, setFlavor] = useState(product.flavors[0]);
+  const product = products.find((p) => p.slug === slug);
+
+  const [size, setSize] = useState("");
+  const [flavor, setFlavor] = useState("");
   const [qty, setQty] = useState(1);
+  const [lastSlug, setLastSlug] = useState("");
+
+  if (product && lastSlug !== product.slug) {
+    setSize(product.sizes[0] || "");
+    setFlavor(product.flavors[0] || "");
+    setQty(1);
+    setLastSlug(product.slug);
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <p className="font-serif text-3xl text-cocoa mb-3">Dessert not found</p>
+          <Link to="/shop" className="text-cocoa underline">
+            Back to shop
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const addToCart = () => {
     cartStore.add({
@@ -63,10 +58,14 @@ function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title={`${product.name} — IZ Patisserie`} description={product.description} />
       <Navbar />
 
       <div className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-10">
-        <Link to="/shop" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-cocoa">
+        <Link
+          to="/shop"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-cocoa"
+        >
           <ArrowLeft className="w-4 h-4" /> All desserts
         </Link>
       </div>
@@ -74,7 +73,14 @@ function ProductPage() {
       <section className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 grid lg:grid-cols-2 gap-10 lg:gap-20">
         <div className="space-y-4">
           <div className="aspect-square rounded-3xl overflow-hidden bg-muted shadow-soft">
-            <img src={product.image} alt={product.name} loading="eager" decoding="async" fetchPriority="high" className="w-full h-full object-cover" />
+            <img
+              src={product.image}
+              alt={product.name}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="grid grid-cols-4 gap-3">
             {[product.image, product.image, product.image, product.image].map((img, i) => (
@@ -94,58 +100,74 @@ function ProductPage() {
               {product.tag}
             </span>
           )}
-          <p className="text-xs tracking-[0.3em] uppercase text-rose-gold mb-2">{product.category}</p>
-          <h1 className="font-serif text-3xl xs:text-4xl sm:text-5xl text-cocoa leading-tight">{product.name}</h1>
+          <p className="text-xs tracking-[0.3em] uppercase text-rose-gold mb-2">
+            {product.category}
+          </p>
+          <h1 className="font-serif text-3xl xs:text-4xl sm:text-5xl text-cocoa leading-tight">
+            {product.name}
+          </h1>
           <p className="text-2xl text-cocoa mt-4 font-medium">৳{product.price.toLocaleString()}</p>
           <p className="mt-6 text-foreground/70 leading-relaxed">{product.description}</p>
 
           <div className="mt-8 space-y-6">
-            <div>
-              <p className="text-sm font-medium text-cocoa mb-3">Size</p>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((s: string) => (
-                  <button
-                    key={s}
-                    onClick={() => setSize(s)}
-                    className={`px-5 py-2.5 rounded-full text-sm transition ${
-                      size === s
-                        ? "bg-cocoa text-cocoa-foreground"
-                        : "border border-border hover:border-cocoa"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
+            {product.sizes.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-cocoa mb-3">Size</p>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((s: string) => (
+                    <button
+                      key={s}
+                      onClick={() => setSize(s)}
+                      className={`px-5 py-2.5 rounded-full text-sm transition ${
+                        size === s
+                          ? "bg-cocoa text-cocoa-foreground"
+                          : "border border-border hover:border-cocoa"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div>
-              <p className="text-sm font-medium text-cocoa mb-3">Flavor</p>
-              <div className="flex flex-wrap gap-2">
-                {product.flavors.map((f: string) => (
-                  <button
-                    key={f}
-                    onClick={() => setFlavor(f)}
-                    className={`px-5 py-2.5 rounded-full text-sm transition ${
-                      flavor === f
-                        ? "bg-cocoa text-cocoa-foreground"
-                        : "border border-border hover:border-cocoa"
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
+            {product.flavors.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-cocoa mb-3">Flavor</p>
+                <div className="flex flex-wrap gap-2">
+                  {product.flavors.map((f: string) => (
+                    <button
+                      key={f}
+                      onClick={() => setFlavor(f)}
+                      className={`px-5 py-2.5 rounded-full text-sm transition ${
+                        flavor === f
+                          ? "bg-cocoa text-cocoa-foreground"
+                          : "border border-border hover:border-cocoa"
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <p className="text-sm font-medium text-cocoa mb-3">Quantity</p>
               <div className="inline-flex items-center border border-border rounded-full">
-                <button onClick={() => setQty(Math.max(1, qty - 1))} className="p-3 hover:text-cocoa" aria-label="Decrease">
+                <button
+                  onClick={() => setQty(Math.max(1, qty - 1))}
+                  className="p-3 hover:text-cocoa"
+                  aria-label="Decrease"
+                >
                   <Minus className="w-4 h-4" />
                 </button>
                 <span className="px-5 text-base tabular-nums">{qty}</span>
-                <button onClick={() => setQty(qty + 1)} className="p-3 hover:text-cocoa" aria-label="Increase">
+                <button
+                  onClick={() => setQty(qty + 1)}
+                  className="p-3 hover:text-cocoa"
+                  aria-label="Increase"
+                >
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
@@ -159,7 +181,10 @@ function ProductPage() {
             >
               Add to basket — ৳{(product.price * qty).toLocaleString()}
             </button>
-            <button className="px-6 py-4 border border-border rounded-full hover:border-cocoa transition" aria-label="Wishlist">
+            <button
+              className="px-6 py-4 border border-border rounded-full hover:border-cocoa transition"
+              aria-label="Wishlist"
+            >
               <Heart className="w-5 h-5" />
             </button>
           </div>

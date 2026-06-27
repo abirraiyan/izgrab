@@ -1,12 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Pencil, Plus, Trash2, X } from "lucide-react";
 import { cmsStore, fileToDataUrl, useCms, type HeroSlide } from "@/lib/cms-store";
-
-export const Route = createFileRoute("/admin/banners")({
-  component: BannersAdmin,
-});
 
 const emptySlide: HeroSlide = {
   id: "",
@@ -21,7 +16,7 @@ const emptySlide: HeroSlide = {
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4MB
 const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25MB
 
-function BannersAdmin() {
+export default function BannersAdmin() {
   const { slides } = useCms();
   const [editing, setEditing] = useState<HeroSlide | null>(null);
 
@@ -35,9 +30,7 @@ function BannersAdmin() {
           </p>
         </div>
         <button
-          onClick={() =>
-            setEditing({ ...emptySlide, id: `slide_${Date.now().toString(36)}` })
-          }
+          onClick={() => setEditing({ ...emptySlide, id: `slide_${Date.now().toString(36)}` })}
           className="bg-cocoa text-cocoa-foreground px-4 py-2.5 rounded-full text-sm inline-flex items-center gap-2 hover:opacity-90"
         >
           <Plus className="w-4 h-4" /> New slide
@@ -66,9 +59,7 @@ function BannersAdmin() {
               ) : null}
               <div className="absolute inset-0 bg-gradient-to-r from-cocoa/70 to-transparent" />
               <div className="absolute inset-0 p-5 flex flex-col justify-end text-cream">
-                <p className="text-[10px] tracking-[0.3em] uppercase opacity-80">
-                  {s.eyebrow}
-                </p>
+                <p className="text-[10px] tracking-[0.3em] uppercase opacity-80">{s.eyebrow}</p>
                 <p className="font-serif text-xl mt-1 whitespace-pre-line line-clamp-2">
                   {s.title}
                 </p>
@@ -200,10 +191,7 @@ function SlideDrawer({
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-cocoa/40" onClick={onClose} />
-      <form
-        onSubmit={submit}
-        className="w-full max-w-xl bg-background h-full overflow-y-auto"
-      >
+      <form onSubmit={submit} className="w-full max-w-xl bg-background h-full overflow-y-auto">
         <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <h3 className="font-serif text-xl text-cocoa">Edit slide</h3>
           <button type="button" onClick={onClose} aria-label="Close">
@@ -214,7 +202,10 @@ function SlideDrawer({
         <div className="p-6 space-y-5">
           <label className="block">
             <span className="text-xs font-medium text-cocoa block mb-1.5">
-              Background image <span className="text-muted-foreground font-normal">(used as poster if a video is set)</span>
+              Background image{" "}
+              <span className="text-muted-foreground font-normal">
+                (used as poster if a video is set)
+              </span>
             </span>
             <div className="flex items-center gap-4">
               <div className="w-28 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0">
@@ -242,12 +233,22 @@ function SlideDrawer({
 
           <label className="block">
             <span className="text-xs font-medium text-cocoa block mb-1.5">
-              Background video <span className="text-muted-foreground font-normal">(optional — overrides the image, autoplays muted)</span>
+              Background video{" "}
+              <span className="text-muted-foreground font-normal">
+                (optional — overrides the image, autoplays muted)
+              </span>
             </span>
             <div className="flex items-center gap-4">
               <div className="w-28 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center">
                 {draft.video ? (
-                  <video src={draft.video} muted loop playsInline autoPlay className="w-full h-full object-cover" />
+                  <video
+                    src={draft.video}
+                    muted
+                    loop
+                    playsInline
+                    autoPlay
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <span className="text-[10px] text-muted-foreground">No video</span>
                 )}
@@ -263,7 +264,7 @@ function SlideDrawer({
                   <input
                     type="url"
                     placeholder="…or paste hosted video URL (.mp4 / .webm)"
-                    value={draft.video?.startsWith("data:") ? "" : draft.video ?? ""}
+                    value={draft.video?.startsWith("data:") ? "" : (draft.video ?? "")}
                     onChange={(e) => update("video", e.target.value)}
                     className={inputCls}
                   />
@@ -278,14 +279,17 @@ function SlideDrawer({
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Tip: short, silent loops (5–15s, ≤25MB) work best. For longer or HD clips, host on a CDN and paste the URL.
+                  Tip: short, silent loops (5–15s, ≤25MB) work best. For longer or HD clips, host on
+                  a CDN and paste the URL.
                 </p>
               </div>
             </div>
           </label>
 
           <label className="block">
-            <span className="text-xs font-medium text-cocoa block mb-1.5">Eyebrow (small text above title)</span>
+            <span className="text-xs font-medium text-cocoa block mb-1.5">
+              Eyebrow (small text above title)
+            </span>
             <input
               value={draft.eyebrow}
               onChange={(e) => update("eyebrow", e.target.value)}
@@ -295,7 +299,9 @@ function SlideDrawer({
           </label>
 
           <label className="block">
-            <span className="text-xs font-medium text-cocoa block mb-1.5">Title (use line break for two lines)</span>
+            <span className="text-xs font-medium text-cocoa block mb-1.5">
+              Title (use line break for two lines)
+            </span>
             <textarea
               rows={3}
               value={draft.title}

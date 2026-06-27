@@ -1,17 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SEO } from "@/components/seo";
 
-export const Route = createFileRoute("/admin/login")({
-  head: () => ({
-    meta: [{ title: "Admin Login · IZ Patisserie" }, { name: "robots", content: "noindex, nofollow" }],
-  }),
-  component: AdminLogin,
-});
-
-function AdminLogin() {
+export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [show, setShow] = useState(false);
@@ -57,7 +51,7 @@ function AdminLogin() {
 
       // Success
       toast.success("Logged in successfully");
-      navigate({ to: "/admin" });
+      navigate("/admin");
     } catch (err) {
       toast.error("An unexpected error occurred");
       setSubmitting(false);
@@ -66,6 +60,7 @@ function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream to-blush/30 flex items-center justify-center p-6">
+      <SEO title="Admin Login · IZ Patisserie" robots="noindex, nofollow" />
       <form
         onSubmit={submit}
         className="w-full max-w-sm bg-card rounded-3xl border border-border shadow-elegant p-8"

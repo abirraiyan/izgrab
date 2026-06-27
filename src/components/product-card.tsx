@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/products";
@@ -22,8 +22,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link
-      to="/product/$slug"
-      params={{ slug: product.slug }}
+      to={`/product/${product.slug}`}
       className="group block bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-elegant transition-all duration-500"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-muted">

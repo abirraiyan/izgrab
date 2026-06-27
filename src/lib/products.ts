@@ -33,7 +33,8 @@ export const products: Product[] = [
     image: izLatte,
     category: "Coffee",
     tag: "Best Seller",
-    description: "Bold cold brew finished with creamy coconut for a tropical, refreshing café signature.",
+    description:
+      "Bold cold brew finished with creamy coconut for a tropical, refreshing café signature.",
     ingredients: "Cold brew coffee, coconut cream, milk, ice, light sweetener.",
     sizes: ["Regular", "Large"],
     flavors: ["Classic Coconut", "Extra Strong", "Less Sweet"],
@@ -68,7 +69,8 @@ export const products: Product[] = [
     price: 1028,
     image: izCroissant,
     category: "Meals",
-    description: "Al dente spaghetti tossed with shrimp, calamari, garlic, olive oil, sun-dried tomato and parmesan.",
+    description:
+      "Al dente spaghetti tossed with shrimp, calamari, garlic, olive oil, sun-dried tomato and parmesan.",
     ingredients: "Spaghetti, shrimp, calamari, garlic, olive oil, sun-dried tomato, parmesan.",
     sizes: ["Single Serving"],
     flavors: ["Regular", "Extra Garlic", "Spicy"],
@@ -91,7 +93,8 @@ export const products: Product[] = [
     image: izPecanTart,
     category: "Desserts",
     tag: "Limited",
-    description: "Buttery tart shell filled with silky caramel and roasted cashews for a rich café dessert.",
+    description:
+      "Buttery tart shell filled with silky caramel and roasted cashews for a rich café dessert.",
     ingredients: "Cashew nuts, caramel, butter, flour, cream, sugar.",
     sizes: ["Single", "Box of 4", "Box of 8"],
     flavors: ["Caramel", "Dark Chocolate", "Sea Salt"],

@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -12,27 +11,9 @@ import izCroissant from "@/assets/iz-croissant.jpg";
 import izCremeBrulee from "@/assets/iz-cremebrulee.jpg";
 import izLatte from "@/assets/iz-latte.jpg";
 import izPecanTart from "@/assets/iz-pecantart.jpg";
+import { SEO } from "@/components/seo";
 
-
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "IZ Patisserie & Cafe — Luxury Desserts, Made Fresh" },
-      {
-        name: "description",
-        content:
-          "Boutique patisserie crafting elegant cakes, brownies, macarons and gift boxes. Same-day delivery & custom orders.",
-      },
-      { property: "og:title", content: "IZ Patisserie & Cafe — Luxury Desserts" },
-      { property: "og:description", content: "Hand-crafted cakes, brownies, macarons and gift boxes." },
-      { property: "og:image", content: heroCake },
-    ],
-  }),
-  component: Home,
-});
-
-
-function Home() {
+export default function Home() {
   const { products, slides, settings } = useCms();
   const igUrl = settings.socials.instagram || "https://www.instagram.com/izpatisserieandcafe/";
   const igHandle = (() => {
@@ -62,9 +43,12 @@ function Home() {
     el.scrollBy({ left: dir * Math.min(el.clientWidth * 0.85, 720), behavior: "smooth" });
   };
 
-
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="IZ Patisserie & Cafe — Luxury Desserts, Made Fresh"
+        description="Boutique patisserie crafting elegant cakes, brownies, macarons and gift boxes. Same-day delivery & custom orders."
+      />
       <Navbar />
 
       {/* HERO SLIDER */}
@@ -101,42 +85,44 @@ function Home() {
           </div>
         ))}
 
-        <div className="relative h-full px-4 xs:px-6 sm:px-10 lg:px-14 flex items-end sm:items-center pb-8 xs:pb-10 sm:pb-0">
-          <div className="max-w-[88%] xs:max-w-md text-cocoa-foreground">
-            <p
-              key={`eyebrow-${active}`}
-              className="text-[10px] tracking-[0.32em] uppercase mb-3 opacity-90 animate-[fade-up_0.6s_ease-out]"
-            >
-              {slides[active].eyebrow}
-            </p>
-            <h1
-              key={`title-${active}`}
-              className="font-serif text-[1.6rem] xs:text-3xl sm:text-4xl lg:text-5xl leading-[1.05] whitespace-pre-line animate-[fade-up_0.7s_ease-out]"
-            >
-              {slides[active].title}
-            </h1>
-            <p
-              key={`sub-${active}`}
-              className="mt-3 text-xs sm:text-sm max-w-sm opacity-90 animate-[fade-up_0.8s_ease-out] leading-relaxed"
-            >
-              {slides[active].sub}
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2.5">
-              <Link
-                to="/shop"
-                className="inline-flex items-center gap-1.5 bg-cream text-cocoa px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-blush transition-all"
+        {slides.length > 0 && (
+          <div className="relative h-full px-4 xs:px-6 sm:px-10 lg:px-14 flex items-end sm:items-center pb-8 xs:pb-10 sm:pb-0">
+            <div className="max-w-[88%] xs:max-w-md text-cocoa-foreground">
+              <p
+                key={`eyebrow-${active}`}
+                className="text-[10px] tracking-[0.32em] uppercase mb-3 opacity-90 animate-[fade-up_0.6s_ease-out]"
               >
-                Shop Now <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link
-                to="/custom-cake"
-                className="inline-flex items-center gap-1.5 border border-cream/70 text-cream px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-cream hover:text-cocoa transition-all"
+                {slides[active]?.eyebrow}
+              </p>
+              <h1
+                key={`title-${active}`}
+                className="font-serif text-[1.6rem] xs:text-3xl sm:text-4xl lg:text-5xl leading-[1.05] whitespace-pre-line animate-[fade-up_0.7s_ease-out]"
               >
-                Customize Cake
-              </Link>
+                {slides[active]?.title}
+              </h1>
+              <p
+                key={`sub-${active}`}
+                className="mt-3 text-xs sm:text-sm max-w-sm opacity-90 animate-[fade-up_0.8s_ease-out] leading-relaxed"
+              >
+                {slides[active]?.sub}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2.5">
+                <Link
+                  to="/shop"
+                  className="inline-flex items-center gap-1.5 bg-cream text-cocoa px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-blush transition-all"
+                >
+                  Shop Now <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <Link
+                  to="/custom-cake"
+                  className="inline-flex items-center gap-1.5 border border-cream/70 text-cream px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-cream hover:text-cocoa transition-all"
+                >
+                  Customize Cake
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Slide dots */}
         <div className="absolute bottom-6 right-6 sm:right-10 flex gap-2 z-10">
@@ -213,10 +199,7 @@ function Home() {
             style={{ scrollbarWidth: "none" }}
           >
             {products.map((p) => (
-              <div
-                key={p.slug}
-                className="snap-start shrink-0 w-[68%] sm:w-[42%] lg:w-[23.5%]"
-              >
+              <div key={p.slug} className="snap-start shrink-0 w-[68%] sm:w-[42%] lg:w-[23.5%]">
                 <ProductCard product={p} />
               </div>
             ))}
@@ -256,9 +239,7 @@ function Home() {
               key={i}
               className="bg-card rounded-2xl p-7 border border-border/60 hover:shadow-soft transition-all"
             >
-              <p className="text-sm text-foreground/75 leading-relaxed mb-6 italic">
-                "{t.text}"
-              </p>
+              <p className="text-sm text-foreground/75 leading-relaxed mb-6 italic">"{t.text}"</p>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-blush/70 flex items-center justify-center font-serif text-cocoa text-sm">
                   {t.name[0]}

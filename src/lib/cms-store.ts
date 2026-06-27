@@ -122,7 +122,6 @@ const defaultState: State = {
   orders: [],
 };
 
-
 function mergeSettings(parsed: Partial<SiteSettings> | null | undefined): SiteSettings {
   return { ...defaultSettings, ...(parsed || {}) };
 }
@@ -135,7 +134,8 @@ function buildState(
   const products = parsed?.products;
   const slides = parsed?.slides;
   return {
-    products: products && products.length > 0 ? products : useDefaultsForEmpty ? defaultProducts : [],
+    products:
+      products && products.length > 0 ? products : useDefaultsForEmpty ? defaultProducts : [],
     slides: slides && slides.length > 0 ? slides : useDefaultsForEmpty ? defaultSlides : [],
     settings: mergeSettings(parsed?.settings),
     orders: parsed?.orders || [],
@@ -169,15 +169,17 @@ if (typeof window !== "undefined") {
   void idbGet<State & { _hydrated?: boolean }>(STORAGE_KEY).then((stored) => {
     if (!stored) return;
     // If IDB says we previously synced from cloud, use it verbatim.
-    state = buildState(stored, !(stored as any)._hydrated);
-    cloudHydrated = !!(stored as any)._hydrated;
+    state = buildState(stored, !stored._hydrated);
+    cloudHydrated = !!stored._hydrated;
     listeners.forEach((l) => l());
   });
 }
 
 async function getAdminToken() {
   if (typeof window === "undefined") return null;
-  const { data } = await import("@/integrations/supabase/client").then(m => m.supabase.auth.getSession());
+  const { data } = await import("@/integrations/supabase/client").then((m) =>
+    m.supabase.auth.getSession(),
+  );
   return data.session?.access_token || null;
 }
 
@@ -315,7 +317,7 @@ export const cmsStore = {
   },
   removeProduct(slug: string) {
     setState((s) => ({ ...s, products: s.products.filter((p) => p.slug !== slug) }));
-    void getAdminToken().then(adminToken => removeProductRecord({ data: { adminToken, slug } }));
+    void getAdminToken().then((adminToken) => removeProductRecord({ data: { adminToken, slug } }));
   },
 
   // Slides
@@ -338,7 +340,7 @@ export const cmsStore = {
   },
   removeSlide(id: string) {
     setState((s) => ({ ...s, slides: s.slides.filter((x) => x.id !== id) }));
-    void getAdminToken().then(adminToken => removeSlideRecord({ data: { adminToken, id } }));
+    void getAdminToken().then((adminToken) => removeSlideRecord({ data: { adminToken, id } }));
   },
   moveSlide(id: string, dir: -1 | 1) {
     let ids: string[] = [];
@@ -352,13 +354,16 @@ export const cmsStore = {
       ids = arr.map((x) => x.id);
       return { ...s, slides: arr };
     });
-    if (ids.length) void getAdminToken().then(adminToken => saveSlideOrder({ data: { adminToken, ids } }));
+    if (ids.length)
+      void getAdminToken().then((adminToken) => saveSlideOrder({ data: { adminToken, ids } }));
   },
 
   // Settings
   updateSettings(patch: Partial<SiteSettings>) {
     setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
-    void getAdminToken().then(adminToken => saveSettingsRecord({ data: { adminToken, settings: state.settings } }));
+    void getAdminToken().then((adminToken) =>
+      saveSettingsRecord({ data: { adminToken, settings: state.settings } }),
+    );
   },
 
   // Orders
@@ -371,11 +376,13 @@ export const cmsStore = {
       ...s,
       orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)),
     }));
-    void getAdminToken().then(adminToken => updateOrderStatusRecord({ data: { adminToken, id, status } }));
+    void getAdminToken().then((adminToken) =>
+      updateOrderStatusRecord({ data: { adminToken, id, status } }),
+    );
   },
   removeOrder(id: string) {
     setState((s) => ({ ...s, orders: s.orders.filter((o) => o.id !== id) }));
-    void getAdminToken().then(adminToken => removeOrderRecord({ data: { adminToken, id } }));
+    void getAdminToken().then((adminToken) => removeOrderRecord({ data: { adminToken, id } }));
   },
 
   resetAll() {

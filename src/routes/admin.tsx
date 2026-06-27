@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useLocation, redirect, useRouter } from "@tanstack/react-router";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
@@ -8,28 +8,11 @@ import {
   ShoppingCart,
   LogOut,
   Home,
-  Lock,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { isAdmin, logout } from "@/lib/admin-auth";
 import { useCms } from "@/lib/cms-store";
 import { supabase } from "@/integrations/supabase/client";
-
-export const Route = createFileRoute("/admin")({
-  head: () => ({
-    meta: [{ title: "Admin · IZ Patisserie" }, { name: "robots", content: "noindex, nofollow" }],
-  }),
-  beforeLoad: async ({ location, navigate }) => {
-    if (location.pathname === "/admin/login") return;
-    const isAuthed = await isAdmin();
-    if (!isAuthed) {
-      // @ts-ignore - bypassing strict route typing for quick auth
-      throw navigate({ to: "/admin/login" });
-    }
-  },
-  component: AdminShell,
-});
+import { SEO } from "@/components/seo";
 
 type NavItem = {
   to: "/admin" | "/admin/products" | "/admin/banners" | "/admin/orders" | "/admin/settings";
@@ -46,24 +29,59 @@ const nav: NavItem[] = [
   { to: "/admin/settings", label: "Site Settings", icon: SettingsIcon },
 ];
 
-function AdminShell() {
+export default function AdminShell() {
   const location = useLocation();
-  const router = useRouter();
+  const navigate = useNavigate();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [authed, setAuthed] = useState(false);
+
+  useEffect(() => {
+    async function check() {
+      if (location.pathname === "/admin/login") {
+        setCheckingAuth(false);
+        return;
+      }
+      const isAuthed = await isAdmin();
+      if (!isAuthed) {
+        navigate("/admin/login");
+      } else {
+        setAuthed(true);
+      }
+      setCheckingAuth(false);
+    }
+    check();
+  }, [location.pathname, navigate]);
 
   // Setup auth listener to log out automatically if session expires
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_OUT' || !session) && location.pathname !== '/admin/login') {
-        router.navigate({ to: '/admin/login' });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_OUT" || !session) && location.pathname !== "/admin/login") {
+        navigate("/admin/login");
       }
     });
     return () => {
       subscription.unsubscribe();
     };
-  }, [location.pathname, router]);
+  }, [location.pathname, navigate]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground animate-pulse">Checking credentials...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (location.pathname === "/admin/login") {
     return <Outlet />;
+  }
+
+  if (!authed) {
+    return null; // Will redirect via useEffect
   }
 
   return <AdminLayout />;
@@ -71,12 +89,14 @@ function AdminShell() {
 
 function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { orders } = useCms();
   const newOrders = orders.filter((o) => o.status === "new").length;
   const [open, setOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-muted/30 flex">
+      <SEO title="Admin · IZ Patisserie" robots="noindex, nofollow" />
       {/* Sidebar */}
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-cocoa text-cocoa-foreground flex flex-col transition-transform lg:translate-x-0 ${
@@ -127,7 +147,7 @@ function AdminLayout() {
           <button
             onClick={async () => {
               await logout();
-              router.navigate({ to: "/admin/login" });
+              navigate("/admin/login");
             }}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm hover:bg-cocoa-foreground/10"
           >

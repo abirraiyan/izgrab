@@ -69,7 +69,7 @@ export const cartStore = {
           ...s,
           open: true,
           items: s.items.map((i) =>
-            `${i.slug}-${i.size}-${i.flavor}` === key ? { ...i, qty: i.qty + item.qty } : i
+            `${i.slug}-${i.size}-${i.flavor}` === key ? { ...i, qty: i.qty + item.qty } : i,
           ),
         };
       }
@@ -99,7 +99,11 @@ export const cartStore = {
 };
 
 export function useCart() {
-  return useSyncExternalStore(cartStore.subscribe, cartStore.getSnapshot, cartStore.getServerSnapshot);
+  return useSyncExternalStore(
+    cartStore.subscribe,
+    cartStore.getSnapshot,
+    cartStore.getServerSnapshot,
+  );
 }
 
 export function itemKey(i: CartItem) {

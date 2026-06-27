@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { Search, User, ShoppingBag, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cartStore, useCart } from "@/lib/cart-store";
@@ -85,7 +85,7 @@ export function Navbar() {
             <Link
               key={l.label}
               to={l.to}
-                className="text-sm tracking-wide text-foreground/80 hover:text-cocoa relative transition-colors duration-300 after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-cocoa after:transition-all after:duration-300 hover:after:w-full"
+              className="text-sm tracking-wide text-foreground/80 hover:text-cocoa relative transition-colors duration-300 after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-cocoa after:transition-all after:duration-300 hover:after:w-full"
             >
               {l.label}
             </Link>
@@ -96,7 +96,10 @@ export function Navbar() {
           <button className="p-2 hover:text-cocoa transition" aria-label="Search">
             <Search className="w-5 h-5" />
           </button>
-          <button className="p-2 hover:text-cocoa transition hidden sm:inline-flex" aria-label="Account">
+          <button
+            className="p-2 hover:text-cocoa transition hidden sm:inline-flex"
+            aria-label="Account"
+          >
             <User className="w-5 h-5" />
           </button>
           <button

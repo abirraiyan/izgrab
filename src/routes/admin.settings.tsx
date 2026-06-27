@@ -1,17 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { cmsStore, useCms, type SiteSettings } from "@/lib/cms-store";
 
-export const Route = createFileRoute("/admin/settings")({
-  component: SettingsAdmin,
-});
-
 const inputCls =
   "w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm outline-none focus:border-cocoa";
 
-function SettingsAdmin() {
+export default function SettingsAdmin() {
   const { settings } = useCms();
   const [draft, setDraft] = useState<SiteSettings>(settings);
 
@@ -170,7 +165,11 @@ function SettingsAdmin() {
         <button
           type="button"
           onClick={() => {
-            if (confirm("Reset ALL site content to defaults? This will erase products, slides, and orders.")) {
+            if (
+              confirm(
+                "Reset ALL site content to defaults? This will erase products, slides, and orders.",
+              )
+            ) {
               cmsStore.resetAll();
               setDraft(cmsStore.getSnapshot().settings);
               toast.success("Reset to defaults");
