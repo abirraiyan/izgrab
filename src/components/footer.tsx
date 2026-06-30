@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Instagram, Facebook, Mail, ArrowRight, Sparkle } from "lucide-react";
-import izLogo from "@/assets/iz-logo.webp";
+import izLogo from "@/assets/iz-logo.svg";
 import { useCms } from "@/lib/cms-store";
 
 export function Footer() {
@@ -12,11 +12,11 @@ export function Footer() {
           <img
             src={izLogo}
             alt="IZ Patisserie & Cafe"
-            width={240}
-            height={96}
+            width={200}
+            height={240}
             loading="lazy"
             decoding="async"
-            className="h-28 sm:h-32 w-auto mb-4 object-contain"
+            className="h-[92px] sm:h-[104px] w-auto mb-4 object-contain"
           />
           <p className="text-sm text-foreground/70 leading-relaxed max-w-xs">
             {settings.footerTagline}

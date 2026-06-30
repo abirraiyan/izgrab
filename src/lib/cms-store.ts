@@ -15,6 +15,8 @@ import {
   saveSlideOrder,
   saveSlideRecord,
   updateOrderStatusRecord,
+  saveDeliveryAreaRecord,
+  removeDeliveryAreaRecord,
 } from "@/lib/cms.functions";
 
 export type HeroSlide = {
@@ -45,6 +47,34 @@ export type Order = {
   status: "new" | "preparing" | "delivered" | "cancelled";
 };
 
+export type DeliveryFeature = {
+  title: string;
+  description: string;
+};
+
+export type DeliveryCoverageSettings = {
+  title: string;
+  subtitle: string;
+  description: string;
+  statusBadgeText: string;
+  buttonText: string;
+  placeholder: string;
+  successMessage: string;
+  failureMessage: string;
+  deliveryHours: string;
+  features: DeliveryFeature[];
+};
+
+export type DeliveryArea = {
+  id: string;
+  name: string;
+  synonyms: string[];
+  active: boolean;
+  display_order: number;
+  map_x: number;
+  map_y: number;
+};
+
 export type SiteSettings = {
   announcements: string[];
   contact: {
@@ -56,6 +86,7 @@ export type SiteSettings = {
   };
   footerTagline: string;
   socials: { instagram: string; facebook: string; email: string };
+  deliveryCoverage: DeliveryCoverageSettings;
 };
 
 type State = {
@@ -63,6 +94,7 @@ type State = {
   slides: HeroSlide[];
   settings: SiteSettings;
   orders: Order[];
+  deliveryAreas: DeliveryArea[];
 };
 
 const STORAGE_KEY = "iz-cms-v1";
@@ -113,6 +145,31 @@ const defaultSettings: SiteSettings = {
     facebook: "https://www.facebook.com/IZPatisserieandCafe/",
     email: "mailto:hello@izpatisserie.com",
   },
+  deliveryCoverage: {
+    title: "We Deliver Inside Dhaka City",
+    subtitle: "Same-Day Gourmet Delivery",
+    description: "Enjoy same-day delivery of handcrafted cakes, gourmet pastries, artisan desserts and café favourites across Dhaka, freshly baked every morning and delivered with care.",
+    statusBadgeText: "Currently Delivering",
+    buttonText: "Check Area",
+    placeholder: "Enter your area",
+    successMessage: "✓ Great News! We currently deliver to {{Area}}",
+    failureMessage: "Delivery to this location is coming soon. We're expanding rapidly across Bangladesh.",
+    deliveryHours: "9:00 AM – 9:00 PM",
+    features: [
+      {
+        title: "Same Day Delivery",
+        description: "Freshly baked and delivered on the same day."
+      },
+      {
+        title: "Delivery Hours",
+        description: "9:00 AM – 9:00 PM"
+      },
+      {
+        title: "Fresh Every Morning",
+        description: "Freshly baked daily using premium ingredients."
+      }
+    ]
+  }
 };
 
 const defaultState: State = {
@@ -120,10 +177,21 @@ const defaultState: State = {
   slides: defaultSlides,
   settings: defaultSettings,
   orders: [],
+  deliveryAreas: [],
 };
 
 function mergeSettings(parsed: Partial<SiteSettings> | null | undefined): SiteSettings {
-  return { ...defaultSettings, ...(parsed || {}) };
+  const merged = { ...defaultSettings, ...(parsed || {}) };
+  merged.contact = { ...defaultSettings.contact, ...(parsed?.contact || {}) };
+  merged.socials = { ...defaultSettings.socials, ...(parsed?.socials || {}) };
+  merged.deliveryCoverage = {
+    ...defaultSettings.deliveryCoverage,
+    ...(parsed?.deliveryCoverage || {}),
+  };
+  if (parsed?.deliveryCoverage?.features) {
+    merged.deliveryCoverage.features = parsed.deliveryCoverage.features;
+  }
+  return merged;
 }
 
 /** Build a full state object. Empty arrays are KEPT empty when `useDefaultsForEmpty` is false. */
@@ -133,12 +201,14 @@ function buildState(
 ): State {
   const products = parsed?.products;
   const slides = parsed?.slides;
+  const deliveryAreas = parsed?.deliveryAreas;
   return {
     products:
       products && products.length > 0 ? products : useDefaultsForEmpty ? defaultProducts : [],
     slides: slides && slides.length > 0 ? slides : useDefaultsForEmpty ? defaultSlides : [],
     settings: mergeSettings(parsed?.settings),
     orders: parsed?.orders || [],
+    deliveryAreas: deliveryAreas || [],
   };
 }
 
@@ -364,6 +434,37 @@ export const cmsStore = {
     void getAdminToken().then((adminToken) =>
       saveSettingsRecord({ data: { adminToken, settings: state.settings } }),
     );
+  },
+
+  // Delivery Areas
+  async upsertDeliveryArea(area: DeliveryArea) {
+    setState((s) => {
+      const exists = s.deliveryAreas.some((x) => x.id === area.id);
+      return {
+        ...s,
+        deliveryAreas: exists
+          ? s.deliveryAreas.map((x) => (x.id === area.id ? area : x))
+          : [...s.deliveryAreas, area],
+      };
+    });
+    await persistNow();
+    const adminToken = await getAdminToken();
+    try {
+      await saveDeliveryAreaRecord({ data: { adminToken, area } });
+    } catch {
+      // Local fallback
+    }
+    await syncFromCloud(true);
+  },
+  removeDeliveryArea(id: string) {
+    setState((s) => ({ ...s, deliveryAreas: s.deliveryAreas.filter((x) => x.id !== id) }));
+    void getAdminToken().then(async (adminToken) => {
+      try {
+        await removeDeliveryAreaRecord({ data: { adminToken, id } });
+      } catch {
+        // Local fallback
+      }
+    });
   },
 
   // Orders

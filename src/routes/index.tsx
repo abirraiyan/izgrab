@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Sparkles, Clock, Flame, CheckCircle2, AlertCircle, MapPin } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
@@ -13,8 +14,130 @@ import izLatte from "@/assets/iz-latte.jpg";
 import izPecanTart from "@/assets/iz-pecantart.jpg";
 import { SEO } from "@/components/seo";
 
+// Stylized Vector Map of Dhaka with animations
+function DeliveryCoverageMap({
+  areas,
+  matchedArea,
+}: {
+  areas: any[];
+  matchedArea?: string;
+}) {
+  return (
+    <div className="relative w-full aspect-[4/3.2] max-h-[220px] sm:max-h-[260px] lg:max-h-[210px] xl:max-h-[240px] mx-auto bg-cream/10 dark:bg-cocoa/15 border border-cocoa/5 rounded-2xl overflow-hidden p-1.5">
+      <div className="absolute top-2 right-2 text-[9px] font-mono text-cocoa/40 dark:text-cream/40 flex items-center gap-1 uppercase tracking-wider select-none">
+        <span>N</span>
+        <div className="w-1 h-1 bg-rose-gold rounded-full animate-pulse" />
+      </div>
+
+      <svg
+        viewBox="0 0 360 400"
+        className="w-full h-full text-cocoa dark:text-cream fill-current"
+        aria-label="Dhaka delivery coverage map"
+      >
+        <defs>
+          <pattern id="mapGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.05" />
+          </pattern>
+        </defs>
+
+        {/* Grid pattern background */}
+        <rect width="100%" height="100%" fill="url(#mapGrid)" />
+
+        {/* River paths (decorative) */}
+        <motion.path
+          d="M 10 390 Q 150 350 200 370 T 350 390"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          opacity="0.08"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+        />
+        <motion.path
+          d="M 30 10 Q 80 180 80 340"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity="0.06"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 2, ease: "easeOut" }}
+        />
+
+        {/* Shaded Delivery Area Region */}
+        <motion.polygon
+          points="130,50 280,90 320,180 290,320 200,380 90,320 60,180"
+          fill="var(--color-cocoa)"
+          fillOpacity="0.07"
+          stroke="var(--color-rose-gold)"
+          strokeWidth="1.5"
+          strokeDasharray="4,4"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1 }}
+        />
+
+        {/* Nodes and Labels */}
+        {areas.map((area) => {
+          const isMatched = matchedArea && area.name.toLowerCase() === matchedArea.toLowerCase();
+          const isKitchen = area.name.toLowerCase() === "banani"; // Banani is central kitchen
+          const isActive = !matchedArea || isMatched;
+
+          return (
+            <g
+              key={area.id}
+              className="transition-opacity duration-300"
+              style={{ opacity: isActive ? 1 : 0.2 }}
+            >
+              {/* Pulsing ring for searched area */}
+              {isMatched && (
+                <circle
+                  cx={area.map_x}
+                  cy={area.map_y}
+                  r="14"
+                  fill="none"
+                  stroke="var(--color-rose-gold)"
+                  strokeWidth="1.5"
+                  className="animate-ping"
+                />
+              )}
+
+              {/* Node Dot */}
+              <circle
+                cx={area.map_x}
+                cy={area.map_y}
+                r={isMatched ? "5.5" : isKitchen ? "4.5" : "3"}
+                fill={isMatched ? "var(--color-rose-gold)" : isKitchen ? "var(--color-cocoa)" : "var(--color-rose-gold)"}
+                stroke={isKitchen ? "var(--color-rose-gold)" : "var(--color-cream)"}
+                strokeWidth={isKitchen ? "1.5" : "1"}
+                className={`transition-all duration-300 ${isMatched ? "drop-shadow-[0_0_8px_var(--color-rose-gold)]" : ""}`}
+              />
+
+              {/* Node text label */}
+              <text
+                x={area.map_x}
+                y={area.map_y - 7}
+                textAnchor="middle"
+                fontSize={isMatched ? "9px" : "7px"}
+                fontWeight={isMatched || isKitchen ? "bold" : "normal"}
+                className="font-sans select-none pointer-events-none fill-cocoa dark:fill-cream transition-all duration-300"
+                opacity={isMatched || isKitchen ? 1 : 0.6}
+              >
+                {area.name}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 export default function Home() {
-  const { products, slides, settings } = useCms();
+  const { products, slides, settings, deliveryAreas } = useCms();
   const igUrl = settings.socials.instagram || "https://www.instagram.com/izpatisserieandcafe/";
   const igHandle = (() => {
     try {
@@ -43,6 +166,70 @@ export default function Home() {
     el.scrollBy({ left: dir * Math.min(el.clientWidth * 0.85, 720), behavior: "smooth" });
   };
 
+  // Delivery Coverage Area Checker state & validation
+  const [searchQuery, setSearchQuery] = useState("");
+  const [validationResult, setValidationResult] = useState<{
+    status: "success" | "fail";
+    message: string;
+    matchedArea?: string;
+  } | null>(null);
+
+  const handleCheckArea = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      setValidationResult({
+        status: "fail",
+        message: "Please enter your neighborhood to check zone.",
+      });
+      return;
+    }
+
+    const activeZones = (deliveryAreas || []).filter((a) => a.active);
+    const matched = activeZones.find((area) =>
+      area.name.toLowerCase() === q ||
+      area.synonyms.some((syn) => syn.toLowerCase() === q || syn.toLowerCase().includes(q) || q.includes(syn.toLowerCase()))
+    );
+
+    const cov = settings.deliveryCoverage || {
+      successMessage: "✓ Great News! We currently deliver to {{Area}}",
+      failureMessage: "Delivery to this location is coming soon. We're expanding rapidly across Bangladesh.",
+    };
+
+    if (matched) {
+      const msg = cov.successMessage.replace("{{Area}}", matched.name);
+      setValidationResult({
+        status: "success",
+        message: msg,
+        matchedArea: matched.name,
+      });
+    } else {
+      setValidationResult({
+        status: "fail",
+        message: cov.failureMessage,
+      });
+    }
+  };
+
+  const covSettings = settings.deliveryCoverage || {
+    title: "We Deliver Inside Dhaka City",
+    subtitle: "Same-Day Gourmet Delivery",
+    description: "Enjoy same-day delivery of handcrafted cakes, gourmet pastries, artisan desserts and café favourites across Dhaka, freshly baked every morning and delivered with care.",
+    statusBadgeText: "Currently Delivering",
+    buttonText: "Check Area",
+    placeholder: "Enter your area",
+    successMessage: "✓ Great News! We currently deliver to {{Area}}",
+    failureMessage: "Delivery to this location is coming soon. We're expanding rapidly across Bangladesh.",
+    deliveryHours: "9:00 AM – 9:00 PM",
+    features: [
+      { title: "Same Day Delivery", description: "Freshly baked and delivered on the same day." },
+      { title: "Delivery Hours", description: "9:00 AM – 9:00 PM" },
+      { title: "Fresh Every Morning", description: "Freshly baked daily using premium ingredients." }
+    ]
+  };
+
+  const featureIcons = [Sparkles, Clock, Flame];
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -51,93 +238,214 @@ export default function Home() {
       />
       <Navbar />
 
-      {/* HERO SLIDER */}
-      <section className="relative h-[60vh] xs:h-[64vh] min-h-[420px] sm:min-h-[480px] max-h-[680px] overflow-hidden mx-2 xs:mx-3 sm:mx-6 mt-2 xs:mt-3 sm:mt-4 rounded-2xl sm:rounded-3xl">
-        {slides.map((s, i) => (
-          <div
-            key={i}
-            className="absolute inset-0 transition-opacity duration-1000"
-            style={{ opacity: i === active ? 1 : 0 }}
-            aria-hidden={i !== active}
-          >
-            {s.video ? (
-              <video
-                src={s.video}
-                poster={s.image || undefined}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload={i === 0 ? "auto" : "metadata"}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img
-                src={s.image}
-                alt={s.title}
-                className="w-full h-full object-cover"
-                loading={i === 0 ? "eager" : "lazy"}
-                fetchPriority={i === 0 ? "high" : "low"}
-                decoding="async"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-cocoa/70 via-cocoa/25 sm:via-cocoa/20 to-transparent" />
-          </div>
-        ))}
+      {/* HERO SECTION - PREMIUM SPLIT LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 mx-2 xs:mx-3 sm:mx-6 mt-2 xs:mt-3 sm:mt-4 lg:h-[65vh] lg:min-h-[580px] lg:max-h-[680px]">
+        {/* LEFT COLUMN: HERO CAROUSEL (60%) */}
+        <section className="lg:col-span-3 h-[450px] xs:h-[480px] sm:h-[550px] lg:h-full relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-soft">
+          {slides.map((s, i) => (
+            <div
+              key={i}
+              className="absolute inset-0 transition-opacity duration-1000"
+              style={{ opacity: i === active ? 1 : 0 }}
+              aria-hidden={i !== active}
+            >
+              {s.video ? (
+                <video
+                  src={s.video}
+                  poster={s.image || undefined}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload={i === 0 ? "auto" : "metadata"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src={s.image}
+                  alt={s.title}
+                  className="w-full h-full object-cover"
+                  loading={i === 0 ? "eager" : "lazy"}
+                  fetchPriority={i === 0 ? "high" : "low"}
+                  decoding="async"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-cocoa/70 via-cocoa/25 sm:via-cocoa/20 to-transparent" />
+            </div>
+          ))}
 
-        {slides.length > 0 && (
-          <div className="relative h-full px-4 xs:px-6 sm:px-10 lg:px-14 flex items-end sm:items-center pb-8 xs:pb-10 sm:pb-0">
-            <div className="max-w-[88%] xs:max-w-md text-cocoa-foreground">
-              <p
-                key={`eyebrow-${active}`}
-                className="text-[10px] tracking-[0.32em] uppercase mb-3 opacity-90 animate-[fade-up_0.6s_ease-out]"
-              >
-                {slides[active]?.eyebrow}
-              </p>
-              <h1
-                key={`title-${active}`}
-                className="font-serif text-[1.6rem] xs:text-3xl sm:text-4xl lg:text-5xl leading-[1.05] whitespace-pre-line animate-[fade-up_0.7s_ease-out]"
-              >
-                {slides[active]?.title}
-              </h1>
-              <p
-                key={`sub-${active}`}
-                className="mt-3 text-xs sm:text-sm max-w-sm opacity-90 animate-[fade-up_0.8s_ease-out] leading-relaxed"
-              >
-                {slides[active]?.sub}
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2.5">
-                <Link
-                  to="/shop"
-                  className="inline-flex items-center gap-1.5 bg-cream text-cocoa px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-blush transition-all"
+          {slides.length > 0 && (
+            <div className="relative h-full px-4 xs:px-6 sm:px-10 lg:px-14 flex items-end sm:items-center pb-8 xs:pb-10 sm:pb-0">
+              <div className="max-w-[88%] xs:max-w-md text-cocoa-foreground">
+                <p
+                  key={`eyebrow-${active}`}
+                  className="text-[10px] tracking-[0.32em] uppercase mb-3 opacity-90 animate-[fade-up_0.6s_ease-out]"
                 >
-                  Shop Now <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                <Link
-                  to="/custom-cake"
-                  className="inline-flex items-center gap-1.5 border border-cream/70 text-cream px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-cream hover:text-cocoa transition-all"
+                  {slides[active]?.eyebrow}
+                </p>
+                <h1
+                  key={`title-${active}`}
+                  className="font-serif text-[1.6rem] xs:text-3xl sm:text-4xl lg:text-5xl leading-[1.05] whitespace-pre-line animate-[fade-up_0.7s_ease-out]"
                 >
-                  Customize Cake
-                </Link>
+                  {slides[active]?.title}
+                </h1>
+                <p
+                  key={`sub-${active}`}
+                  className="mt-3 text-xs sm:text-sm max-w-sm opacity-90 animate-[fade-up_0.8s_ease-out] leading-relaxed"
+                >
+                  {slides[active]?.sub}
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2.5">
+                  <Link
+                    to="/shop"
+                    className="inline-flex items-center gap-1.5 bg-cream text-cocoa px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-blush transition-all"
+                  >
+                    Shop Now <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <Link
+                    to="/custom-cake"
+                    className="inline-flex items-center gap-1.5 border border-cream/70 text-cream px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-cream hover:text-cocoa transition-all"
+                  >
+                    Customize Cake
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Slide dots */}
-        <div className="absolute bottom-6 right-6 sm:right-10 flex gap-2 z-10">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setActive(i)}
-              aria-label={`Slide ${i + 1}`}
-              className={`h-1 rounded-full transition-all duration-500 ${
-                i === active ? "w-10 bg-cream" : "w-1.5 bg-cream/50"
-              }`}
-            />
-          ))}
-        </div>
-      </section>
+          {/* Slide dots */}
+          <div className="absolute bottom-6 right-6 sm:right-10 flex gap-2 z-10">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                aria-label={`Slide ${i + 1}`}
+                className={`h-1 rounded-full transition-all duration-500 ${
+                  i === active ? "w-10 bg-cream" : "w-1.5 bg-cream/50"
+                }`}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* RIGHT COLUMN: PREMIUM DELIVERY COVERAGE CARD (40%) */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="lg:col-span-2 bg-cream/35 dark:bg-cocoa/10 border border-cocoa/10 dark:border-cream/10 rounded-2xl sm:rounded-3xl p-5 xs:p-6 sm:p-7 flex flex-col justify-between shadow-soft lg:h-full lg:min-h-0 overflow-y-auto"
+        >
+          {/* Header Row */}
+          <div>
+            <div className="flex items-center justify-between gap-4 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/45 text-emerald-800 dark:text-emerald-300 text-[10px] sm:text-xs font-semibold tracking-wide border border-emerald-100 dark:border-emerald-900/50">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                {covSettings.statusBadgeText}
+              </span>
+              <span className="text-[10px] uppercase tracking-wider text-cocoa/50 dark:text-cream/50 font-medium">
+                {covSettings.deliveryHours}
+              </span>
+            </div>
+
+            <h2 className="font-serif text-xl sm:text-2xl xl:text-[1.65rem] text-cocoa dark:text-cream font-bold leading-tight mb-1.5">
+              {covSettings.title}
+            </h2>
+            <p className="text-xs sm:text-sm text-foreground/75 leading-relaxed">
+              {covSettings.description}
+            </p>
+          </div>
+
+          {/* Interactive SVG Dhaka Map */}
+          <DeliveryCoverageMap
+            areas={deliveryAreas || []}
+            matchedArea={validationResult?.status === "success" ? validationResult.matchedArea : undefined}
+          />
+
+          {/* Delivery Area Checker Form */}
+          <div>
+            <form onSubmit={handleCheckArea} className="relative flex items-center gap-2">
+              <input
+                type="text"
+                placeholder={covSettings.placeholder}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (!e.target.value) setValidationResult(null);
+                }}
+                className="w-full bg-background/80 border border-border focus:border-rose-gold/60 focus:ring-1 focus:ring-rose-gold/60 rounded-full px-4 py-2.5 text-xs sm:text-sm font-sans text-foreground placeholder:text-foreground/40 outline-none transition-all"
+              />
+              <button
+                type="submit"
+                className="bg-cocoa text-cream px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold hover:bg-rose-gold hover:text-cocoa transition-all duration-300 shadow-soft shrink-0"
+              >
+                {covSettings.buttonText}
+              </button>
+            </form>
+
+            {/* Validation Feedback Message Container (Fixed min-height to prevent layout shift) */}
+            <div className="min-h-[38px] flex items-center justify-start mt-1 px-1">
+              <AnimatePresence mode="wait">
+                {validationResult && (
+                  <motion.div
+                    key={validationResult.message}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className={`flex items-start gap-2 text-xs font-semibold leading-normal ${
+                      validationResult.status === "success"
+                        ? "text-emerald-700 dark:text-emerald-400"
+                        : "text-rose-700 dark:text-rose-400"
+                    }`}
+                  >
+                    {validationResult.status === "success" ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+                    )}
+                    <span>
+                      {validationResult.status === "success" ? (
+                        <>
+                          {validationResult.message}
+                          <span className="block text-[10px] text-muted-foreground font-medium mt-0.5">
+                            Estimated delivery: 60–90 minutes
+                          </span>
+                        </>
+                      ) : (
+                        validationResult.message
+                      )}
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Premium features grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 gap-2.5 border-t border-cocoa/10 dark:border-cream/10 pt-3">
+            {covSettings.features.map((feat, i) => {
+              const Icon = featureIcons[i] || Sparkles;
+              return (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex items-start gap-2.5 p-2 rounded-2xl bg-cream/45 dark:bg-cocoa/20 border border-cocoa/5 dark:border-cream/5 hover:border-rose-gold/20 hover:shadow-soft transition-all duration-300"
+                >
+                  <div className="w-7 h-7 rounded-full bg-cream dark:bg-cocoa/40 flex items-center justify-center text-rose-gold shrink-0 mt-0.5">
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-[10px] sm:text-[11px] font-bold text-cocoa dark:text-cream leading-tight mb-0.5 truncate">{feat.title}</h4>
+                    <p className="text-[9px] sm:text-[10px] text-foreground/75 leading-tight">{feat.description}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.section>
+      </div>
 
       {/* CATEGORIES — editorial row */}
       <section className="container mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-4">

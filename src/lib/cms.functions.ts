@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from "@/integrations/supabase/client";
-import type { HeroSlide, Order, SiteSettings } from "@/lib/cms-store";
+import type { HeroSlide, Order, SiteSettings, DeliveryArea } from "@/lib/cms-store";
 import type { Product } from "@/lib/products";
 
 type CmsStatePayload = {
@@ -147,6 +147,7 @@ function settingsFromRow(row: any): SiteSettings {
     contact: row.contact || {},
     footerTagline: row.footer_tagline || "",
     socials: row.socials || {},
+    deliveryCoverage: row.delivery_coverage || undefined,
   };
 }
 
@@ -169,7 +170,8 @@ export async function getCmsState({ data }: { data: { adminToken?: string | null
     db().from("cms_site_settings").select("*").eq("key", "main").maybeSingle(),
   ]);
 
-  const admin = await isAdminToken(data.adminToken);
+  const adminToken = data.adminToken;
+  const admin = await isAdminToken(adminToken);
   const ordersRes = admin
     ? await db().from("ecommerce_orders").select("*").order("created_at", { ascending: false })
     : { data: [] };
@@ -189,12 +191,105 @@ export async function getCmsState({ data }: { data: { adminToken?: string | null
     })),
   );
 
+  // Fetch delivery areas with dynamic seeding and robust error fallbacks
+  let deliveryAreas: DeliveryArea[] = [];
+  try {
+    const { data: areasData, error: areasError } = await db()
+      .from("delivery_areas")
+      .select("*")
+      .order("display_order", { ascending: true });
+
+    if (areasError) throw areasError;
+
+    if (areasData) {
+      if (areasData.length === 0) {
+        const defaultAreas = [
+          { name: "Gulshan", synonyms: ["gulshan", "gulshan 1", "gulshan 2", "gulsan"], active: true, display_order: 1, map_x: 250, map_y: 210 },
+          { name: "Banani", synonyms: ["banani", "banani dohs", "banani-11"], active: true, display_order: 2, map_x: 210, map_y: 200 },
+          { name: "Baridhara", synonyms: ["baridhara", "baridhara dohs", "baridara"], active: true, display_order: 3, map_x: 290, map_y: 190 },
+          { name: "Uttara", synonyms: ["uttara", "uttara sector", "uttara model town"], active: true, display_order: 4, map_x: 200, map_y: 70 },
+          { name: "Mirpur", synonyms: ["mirpur", "mirpur 1", "mirpur 2", "mirpur 10", "mirpur 11", "mirpur 12", "mirpur dohs", "pallabi"], active: true, display_order: 5, map_x: 110, map_y: 180 },
+          { name: "Mohammadpur", synonyms: ["mohammadpur", "mohammad pur", "town hall", "adabor"], active: true, display_order: 6, map_x: 100, map_y: 290 },
+          { name: "Dhanmondi", synonyms: ["dhanmondi", "dhanmondi r/a", "dhanmondi 32"], active: true, display_order: 7, map_x: 160, map_y: 310 },
+          { name: "Bashundhara", synonyms: ["bashundhara", "basundhara", "bashundhara r/a"], active: true, display_order: 8, map_x: 270, map_y: 150 },
+          { name: "Tejgaon", synonyms: ["tejgaon", "tejgaon i/a", "kawran bazar", "karwan bazar"], active: true, display_order: 9, map_x: 200, map_y: 280 },
+          { name: "Motijheel", synonyms: ["motijheel", "matijheel", "dilkusha"], active: true, display_order: 10, map_x: 250, map_y: 390 },
+          { name: "Khilgaon", synonyms: ["khilgaon", "khilgon", "taltola"], active: true, display_order: 11, map_x: 290, map_y: 320 },
+          { name: "Badda", synonyms: ["badda", "merul badda", "middle badda", "north badda"], active: true, display_order: 12, map_x: 300, map_y: 240 },
+          { name: "Rampura", synonyms: ["rampura", "banasree", "aftabnagar", "aftab nagar"], active: true, display_order: 13, map_x: 290, map_y: 270 },
+          { name: "Lalbagh", synonyms: ["lalbagh", "old dhaka", "wari", "sadarghat", "chawkbazar"], active: true, display_order: 14, map_x: 210, map_y: 440 },
+          { name: "Mogbazar", synonyms: ["mogbazar", "moghbazar", "shantinagar", "shanti nagar", "malibagh", "kakrail"], active: true, display_order: 15, map_x: 240, map_y: 335 },
+          { name: "Farmgate", synonyms: ["farmgate", "farm gate", "indira road", "tejturi bazar"], active: true, display_order: 16, map_x: 180, map_y: 310 },
+        ];
+
+        if (admin) {
+          await Promise.all(
+            defaultAreas.map((area) =>
+              db()
+                .from("delivery_areas")
+                .insert({
+                  name: area.name,
+                  synonyms: area.synonyms,
+                  active: area.active,
+                  display_order: area.display_order,
+                  map_x: area.map_x,
+                  map_y: area.map_y,
+                })
+            )
+          );
+          const { data: reloaded } = await db()
+            .from("delivery_areas")
+            .select("*")
+            .order("display_order", { ascending: true });
+          if (reloaded) {
+            areasData.push(...reloaded);
+          }
+        } else {
+          // Public visitor fallback
+          areasData.push(...defaultAreas.map((a, i) => ({ id: `default-${i}`, ...a })));
+        }
+      }
+
+      deliveryAreas = areasData.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        synonyms: Array.isArray(row.synonyms) ? row.synonyms : JSON.parse(row.synonyms || "[]"),
+        active: row.active,
+        display_order: row.display_order,
+        map_x: row.map_x,
+        map_y: row.map_y,
+      }));
+    }
+  } catch {
+    // DB or network failure fallback
+    const defaultAreas = [
+      { id: "d1", name: "Gulshan", synonyms: ["gulshan", "gulshan 1", "gulshan 2", "gulsan"], active: true, display_order: 1, map_x: 250, map_y: 210 },
+      { id: "d2", name: "Banani", synonyms: ["banani", "banani dohs", "banani-11"], active: true, display_order: 2, map_x: 210, map_y: 200 },
+      { id: "d3", name: "Baridhara", synonyms: ["baridhara", "baridhara dohs", "baridara"], active: true, display_order: 3, map_x: 290, map_y: 190 },
+      { id: "d4", name: "Uttara", synonyms: ["uttara", "uttara sector", "uttara model town"], active: true, display_order: 4, map_x: 200, map_y: 70 },
+      { id: "d5", name: "Mirpur", synonyms: ["mirpur", "mirpur 1", "mirpur 2", "mirpur 10", "mirpur 11", "mirpur 12", "mirpur dohs", "pallabi"], active: true, display_order: 5, map_x: 110, map_y: 180 },
+      { id: "d6", name: "Mohammadpur", synonyms: ["mohammadpur", "mohammad pur", "town hall", "adabor"], active: true, display_order: 6, map_x: 100, map_y: 290 },
+      { id: "d7", name: "Dhanmondi", synonyms: ["dhanmondi", "dhanmondi r/a", "dhanmondi 32"], active: true, display_order: 7, map_x: 160, map_y: 310 },
+      { id: "d8", name: "Bashundhara", synonyms: ["bashundhara", "basundhara", "bashundhara r/a"], active: true, display_order: 8, map_x: 270, map_y: 150 },
+      { id: "d9", name: "Tejgaon", synonyms: ["tejgaon", "tejgaon i/a", "kawran bazar", "karwan bazar"], active: true, display_order: 9, map_x: 200, map_y: 280 },
+      { id: "d10", name: "Motijheel", synonyms: ["motijheel", "matijheel", "dilkusha"], active: true, display_order: 10, map_x: 250, map_y: 390 },
+      { id: "d11", name: "Khilgaon", synonyms: ["khilgaon", "khilgon", "taltola"], active: true, display_order: 11, map_x: 290, map_y: 320 },
+      { id: "d12", name: "Badda", synonyms: ["badda", "merul badda", "middle badda", "north badda"], active: true, display_order: 12, map_x: 300, map_y: 240 },
+      { id: "d13", name: "Rampura", synonyms: ["rampura", "banasree", "aftabnagar", "aftab nagar"], active: true, display_order: 13, map_x: 290, map_y: 270 },
+      { id: "d14", name: "Lalbagh", synonyms: ["lalbagh", "old dhaka", "wari", "sadarghat", "chawkbazar"], active: true, display_order: 14, map_x: 210, map_y: 440 },
+      { id: "d15", name: "Mogbazar", synonyms: ["mogbazar", "moghbazar", "shantinagar", "shanti nagar", "malibagh", "kakrail"], active: true, display_order: 15, map_x: 240, map_y: 335 },
+      { id: "d16", name: "Farmgate", synonyms: ["farmgate", "farm gate", "indira road", "tejturi bazar"], active: true, display_order: 16, map_x: 180, map_y: 310 },
+    ];
+    deliveryAreas = defaultAreas;
+  }
+
   return {
     products,
     slides,
     settings: settingsRes.data ? settingsFromRow(settingsRes.data) : null,
     orders: (ordersRes.data || []).map(orderFromRow),
-  } satisfies CmsStatePayload;
+    deliveryAreas,
+  } satisfies any;
 }
 
 export async function saveProductRecord({
@@ -299,18 +394,39 @@ export async function saveSettingsRecord({
   data: { adminToken?: string | null; settings: SiteSettings };
 }) {
   await requireAdmin(data.adminToken);
-  const { error } = await db().from("cms_site_settings").upsert(
-    {
-      key: "main",
-      announcements: data.settings.announcements,
-      contact: data.settings.contact,
-      footer_tagline: data.settings.footerTagline,
-      socials: data.settings.socials,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "key" },
-  );
-  if (error) throw new Error(error.message);
+  try {
+    const { error } = await db().from("cms_site_settings").upsert(
+      {
+        key: "main",
+        announcements: data.settings.announcements,
+        contact: data.settings.contact,
+        footer_tagline: data.settings.footerTagline,
+        socials: data.settings.socials,
+        delivery_coverage: data.settings.deliveryCoverage,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "key" },
+    );
+    if (error) throw error;
+  } catch (err: any) {
+    // Fallback if the database has not been migrated to include delivery_coverage column yet
+    if (err.message?.includes("delivery_coverage") || err.message?.includes("column")) {
+      const { error } = await db().from("cms_site_settings").upsert(
+        {
+          key: "main",
+          announcements: data.settings.announcements,
+          contact: data.settings.contact,
+          footer_tagline: data.settings.footerTagline,
+          socials: data.settings.socials,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "key" },
+      );
+      if (error) throw new Error(error.message);
+    } else {
+      throw new Error(err.message || String(err));
+    }
+  }
   return { ok: true };
 }
 
@@ -356,6 +472,39 @@ export async function removeOrderRecord({
 }) {
   await requireAdmin(data.adminToken);
   const { error } = await db().from("ecommerce_orders").delete().eq("id", data.id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+export async function saveDeliveryAreaRecord({
+  data,
+}: {
+  data: { adminToken?: string | null; area: DeliveryArea };
+}) {
+  await requireAdmin(data.adminToken);
+  const { error } = await db()
+    .from("delivery_areas")
+    .upsert({
+      id: data.area.id,
+      name: data.area.name,
+      synonyms: data.area.synonyms,
+      active: data.area.active,
+      display_order: data.area.display_order,
+      map_x: data.area.map_x,
+      map_y: data.area.map_y,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "id" });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+export async function removeDeliveryAreaRecord({
+  data,
+}: {
+  data: { adminToken?: string | null; id: string };
+}) {
+  await requireAdmin(data.adminToken);
+  const { error } = await db().from("delivery_areas").delete().eq("id", data.id);
   if (error) throw new Error(error.message);
   return { ok: true };
 }

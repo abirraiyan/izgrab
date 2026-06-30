@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Inter:wght@400;600&amp;display=swap');
+      .title-iz {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 38px;
+        fill: #ffffff;
+        letter-spacing: 2px;
+      }
+      .title-grab {
+        font-family: 'Great Vibes', cursive;
+        font-size: 48px;
+        fill: #ffffff;
+      }
+      .tag-top {
+        font-family: 'Inter', sans-serif;
+        font-size: 8px;
+        font-weight: 600;
+        fill: #ffffff;
+        letter-spacing: 1.2px;
+      }
+      .tag-bottom {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        fill: #ffffff;
+        letter-spacing: 2px;
+      }
+    </style>
+    <radialGradient id="bg-grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#2a2a2a" />
+      <stop offset="100%" stop-color="#0a0a0a" />
+    </radialGradient>
+  </defs>
+
+  <!-- Capsule Outer Shape -->
+  <rect x="5" y="5" width="190" height="230" rx="65" ry="65" fill="url(#bg-grad)" stroke="#ffffff" stroke-width="2.5" />
+  
+  <!-- Capsule Inner Border -->
+  <rect x="11" y="11" width="178" height="218" rx="59" ry="59" fill="none" stroke="#ffffff" stroke-width="0.75" opacity="0.8" />
+
+  <!-- Subtle abstract textured curves inside capsule -->
+  <path d="M 30,130 C 50,90 150,90 170,130" fill="none" stroke="#ffffff" stroke-width="0.25" opacity="0.2" />
+  <path d="M 30,140 C 50,180 150,180 170,140" fill="none" stroke="#ffffff" stroke-width="0.25" opacity="0.2" />
+  <path d="M 25,120 Q 100,60 175,120" fill="none" stroke="#ffffff" stroke-width="0.25" opacity="0.15" />
+  <path d="M 25,150 Q 100,210 175,150" fill="none" stroke="#ffffff" stroke-width="0.25" opacity="0.15" />
+
+  <!-- Top Curved Path for Text -->
+  <path id="top-curve" d="M 38,70 A 62,62 0 0,1 162,70" fill="none" />
+
+  <!-- Curved Top Text -->
+  <text class="tag-top" dy="-2">
+    <textPath href="#top-curve" startOffset="50%" text-anchor="middle">THE ART OF THE PERFECT CRUMB</textPath>
+  </text>
+
+  <!-- Center Text -->
+  <text x="100" y="118" class="title-iz" text-anchor="middle">IZ</text>
+  <text x="100" y="162" class="title-grab" text-anchor="middle">Grab</text>
+
+  <!-- Bottom Text -->
+  <text x="100" y="212" class="tag-bottom" text-anchor="middle">EAT REAL</text>
+</svg>

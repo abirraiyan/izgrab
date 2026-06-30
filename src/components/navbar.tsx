@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { Search, User, ShoppingBag, Menu, X } from "lucide-react";
+import { Search, ShoppingBag, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cartStore, useCart } from "@/lib/cart-store";
 import { AnnouncementBar } from "@/components/announcement-bar";
-import izLogo from "@/assets/iz-logo.webp";
+import izLogo from "@/assets/iz-logo.svg";
 
 const links = [
   { to: "/", label: "Home" },
@@ -63,20 +63,18 @@ export function Navbar() {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }
           }}
-          className="flex items-center group"
+          className="flex items-center group md:-ml-3"
           aria-label="IZ Patisserie & Cafe — Home"
         >
           <img
             src={izLogo}
             alt="IZ Patisserie & Cafe"
-            width={240}
-            height={96}
+            width={200}
+            height={240}
             loading="eager"
             fetchPriority="high"
             decoding="async"
-            className={`w-auto max-w-[210px] sm:max-w-[260px] object-contain transition-[height,transform,filter] duration-500 ease-out group-hover:scale-[1.02] ${
-              scrolled ? "h-12 sm:h-16 lg:h-20" : "h-16 sm:h-20 lg:h-24"
-            }`}
+            className="w-auto h-[44px] md:h-[56px] object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
         </Link>
 
@@ -95,12 +93,6 @@ export function Navbar() {
         <div className="flex items-center gap-1 sm:gap-2">
           <button className="p-2 hover:text-cocoa transition" aria-label="Search">
             <Search className="w-5 h-5" />
-          </button>
-          <button
-            className="p-2 hover:text-cocoa transition hidden sm:inline-flex"
-            aria-label="Account"
-          >
-            <User className="w-5 h-5" />
           </button>
           <button
             onClick={() => cartStore.setOpen(true)}
