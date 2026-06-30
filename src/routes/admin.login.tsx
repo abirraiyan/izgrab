@@ -18,19 +18,28 @@ export default function AdminLogin() {
     setSubmitting(true);
 
     try {
+      if (import.meta.env.DEV) {
+        console.log("[AdminLogin] Initialising auth query...");
+        console.log("[AdminLogin] Target Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
+        console.log("[AdminLogin] VITE_SUPABASE_PUBLISHABLE_KEY Present:", !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: pw,
       });
 
       if (error) {
-        toast.error("Invalid credentials");
+        if (import.meta.env.DEV) {
+          console.error("[AdminLogin] Auth error returned from Supabase:", error);
+        }
+        toast.error(error.message || "Invalid credentials");
         setSubmitting(false);
         return;
       }
 
       if (!data.session) {
-        toast.error("Login failed");
+        toast.error("Login failed: Session not established");
         setSubmitting(false);
         return;
       }
@@ -44,7 +53,7 @@ export default function AdminLogin() {
 
       if (adminError || !admin) {
         await supabase.auth.signOut();
-        toast.error("Access denied");
+        toast.error("Access denied: Not an administrator");
         setSubmitting(false);
         return;
       }
@@ -52,8 +61,9 @@ export default function AdminLogin() {
       // Success
       toast.success("Logged in successfully");
       navigate("/admin");
-    } catch (err) {
-      toast.error("An unexpected error occurred");
+    } catch (err: any) {
+      console.error("[AdminLogin] Exception during submit handler:", err);
+      toast.error(err.message || "An unexpected error occurred");
       setSubmitting(false);
     }
   };
