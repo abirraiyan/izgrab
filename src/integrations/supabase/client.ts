@@ -5,23 +5,45 @@ import type { Database } from "./types";
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  let SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
   const SUPABASE_PUBLISHABLE_KEY =
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
 
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error(
-      "Missing Supabase environment variables. Ensure SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (or VITE_ prefixed versions) are set in your .env file.",
-    );
+  // Strip trailing '/rest/v1' or '/rest/v1/' if present
+  if (SUPABASE_URL) {
+    SUPABASE_URL = SUPABASE_URL.replace(/\/rest\/v1\/?$/, "");
   }
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: {
-      storage: typeof window !== "undefined" ? localStorage : undefined,
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  });
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    console.error(
+      "CRITICAL: Missing Supabase environment variables VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY. Please ensure these are configured in Vercel settings."
+    );
+    // Return a dummy client to prevent the application from crashing on initialization
+    return createClient<Database>("https://placeholder-project.supabase.co", "sb_publishable_dummy_key", {
+      auth: {
+        persistSession: false,
+      },
+    });
+  }
+
+  try {
+    const isBrowser = typeof window !== "undefined";
+    const storageObj = isBrowser ? window.localStorage : undefined;
+    return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        storage: storageObj,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    });
+  } catch (err) {
+    console.error("Failed to initialize Supabase client:", err);
+    return createClient<Database>("https://placeholder-project.supabase.co", "sb_publishable_dummy_key", {
+      auth: {
+        persistSession: false,
+      },
+    });
+  }
 }
 
 let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
@@ -34,3 +56,4 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
+

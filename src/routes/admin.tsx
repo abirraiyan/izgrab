@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, Component, type ReactNode, type ErrorInfo } from "react";
 import {
   LayoutDashboard,
   Package,
@@ -8,11 +8,172 @@ import {
   ShoppingCart,
   LogOut,
   Home,
+  AlertCircle,
 } from "lucide-react";
 import { isAdmin, logout } from "@/lib/admin-auth";
 import { useCms } from "@/lib/cms-store";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/seo";
+
+interface ErrorBoundaryProps {
+  children?: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
+
+class AdminErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: null,
+    errorInfo: null,
+  };
+
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error, errorInfo: null };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("[AdminErrorBoundary] Uncaught administrative sub-tree error:", error, errorInfo);
+    this.setState({ errorInfo });
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      const isDev = import.meta.env.DEV;
+      return (
+        <div className="min-h-screen bg-muted/20 flex items-center justify-center p-6">
+          <div className="bg-card border border-destructive/20 rounded-2xl p-6 sm:p-8 max-w-xl w-full shadow-soft text-cocoa">
+            <div className="flex items-center gap-3 text-destructive mb-4">
+              <AlertCircle className="w-8 h-8" />
+              <h2 className="font-serif text-xl sm:text-2xl font-bold">Admin Dashboard Error</h2>
+            </div>
+            
+            <p className="text-sm text-foreground/80 mb-4 font-semibold">
+              An unexpected runtime error occurred inside the admin component tree.
+            </p>
+
+            <div className="bg-muted p-4 rounded-xl border border-border overflow-auto max-h-[120px] mb-4">
+              <p className="text-xs font-bold text-destructive">
+                {this.state.error?.name || "Error"}: {this.state.error?.message}
+              </p>
+            </div>
+
+            {isDev && this.state.error && (
+              <div className="bg-muted p-4 rounded-xl border border-border overflow-auto max-h-[200px] mb-4 font-mono text-[10px] text-foreground/70 whitespace-pre">
+                {this.state.error.stack}
+              </div>
+            )}
+
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full bg-cocoa text-cream py-2.5 rounded-full text-xs font-semibold hover:opacity-90 transition"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default function AdminShell() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [authed, setAuthed] = useState(false);
+
+  useEffect(() => {
+    async function check() {
+      if (location.pathname === "/admin/login") {
+        console.log("[AdminShell] Current route is login page. Skipping verification.");
+        setCheckingAuth(false);
+        return;
+      }
+      try {
+        console.log("[AdminShell] Verifying admin session status...");
+        const isAuthed = await isAdmin();
+        console.log("[AdminShell] Admin verification resolved:", isAuthed);
+        if (!isAuthed) {
+          console.warn("[AdminShell] User is not authorized as admin. Redirecting to login...");
+          navigate("/admin/login");
+        } else {
+          console.log("[AdminShell] Authorized successfully. Granting entry.");
+          setAuthed(true);
+        }
+      } catch (err) {
+        console.error("[AdminShell] Verification failed with exception:", err);
+        navigate("/admin/login");
+      } finally {
+        setCheckingAuth(false);
+      }
+    }
+    check();
+  }, [location.pathname, navigate]);
+
+  // Setup auth listener to log out automatically if session expires
+  useEffect(() => {
+    let sub: any = null;
+    try {
+      console.log("[AdminShell] Initialising auth listener...");
+      const res = supabase.auth.onAuthStateChange((event, session) => {
+        console.log("[AdminShell] Auth event triggered:", event, "Session exists:", !!session);
+        if ((event === "SIGNED_OUT" || !session) && location.pathname !== "/admin/login") {
+          console.warn("[AdminShell] Session expired or logged out. Redirecting to login...");
+          navigate("/admin/login");
+        }
+      });
+      sub = res?.data?.subscription;
+    } catch (err) {
+      console.error("[AdminShell] Failed to register auth state listener:", err);
+    }
+    return () => {
+      if (sub) {
+        console.log("[AdminShell] Cleaning up auth listener...");
+        try {
+          sub.unsubscribe();
+        } catch (unsubErr) {
+          console.error("[AdminShell] Listener unsubscribe failed:", unsubErr);
+        }
+      }
+    };
+  }, [location.pathname, navigate]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground animate-pulse">Checking credentials...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (location.pathname === "/admin/login") {
+    return (
+      <AdminErrorBoundary>
+        <Outlet />
+      </AdminErrorBoundary>
+    );
+  }
+
+  if (!authed) {
+    console.log("[AdminShell] Not authenticated. Rendering null fallback.");
+    return null;
+  }
+
+  return (
+    <AdminErrorBoundary>
+      <AdminLayout />
+    </AdminErrorBoundary>
+  );
+}
 
 type NavItem = {
   to: "/admin" | "/admin/products" | "/admin/banners" | "/admin/orders" | "/admin/settings";
@@ -28,64 +189,6 @@ const nav: NavItem[] = [
   { to: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { to: "/admin/settings", label: "Site Settings", icon: SettingsIcon },
 ];
-
-export default function AdminShell() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [authed, setAuthed] = useState(false);
-
-  useEffect(() => {
-    async function check() {
-      if (location.pathname === "/admin/login") {
-        setCheckingAuth(false);
-        return;
-      }
-      const isAuthed = await isAdmin();
-      if (!isAuthed) {
-        navigate("/admin/login");
-      } else {
-        setAuthed(true);
-      }
-      setCheckingAuth(false);
-    }
-    check();
-  }, [location.pathname, navigate]);
-
-  // Setup auth listener to log out automatically if session expires
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === "SIGNED_OUT" || !session) && location.pathname !== "/admin/login") {
-        navigate("/admin/login");
-      }
-    });
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [location.pathname, navigate]);
-
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground animate-pulse">Checking credentials...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (location.pathname === "/admin/login") {
-    return <Outlet />;
-  }
-
-  if (!authed) {
-    return null; // Will redirect via useEffect
-  }
-
-  return <AdminLayout />;
-}
 
 function AdminLayout() {
   const location = useLocation();

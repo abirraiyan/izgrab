@@ -236,31 +236,49 @@ let lastSyncAt = 0;
 // the localStorage quota). Once hydrated, future writes go to IDB primarily
 // with a best-effort localStorage mirror for fast initial paint.
 if (typeof window !== "undefined") {
-  void idbGet<State & { _hydrated?: boolean }>(STORAGE_KEY).then((stored) => {
-    if (!stored) return;
-    // If IDB says we previously synced from cloud, use it verbatim.
-    state = buildState(stored, !stored._hydrated);
-    cloudHydrated = !!stored._hydrated;
-    listeners.forEach((l) => l());
-  });
+  idbGet<State & { _hydrated?: boolean }>(STORAGE_KEY)
+    .then((stored) => {
+      if (!stored) return;
+      // If IDB says we previously synced from cloud, use it verbatim.
+      state = buildState(stored, !stored._hydrated);
+      cloudHydrated = !!stored._hydrated;
+      listeners.forEach((l) => l());
+    })
+    .catch((err) => {
+      console.error("IndexedDB hydration failed:", err);
+    });
 }
 
 async function getAdminToken() {
   if (typeof window === "undefined") return null;
-  const { data } = await import("@/integrations/supabase/client").then((m) =>
-    m.supabase.auth.getSession(),
-  );
-  return data.session?.access_token || null;
+  try {
+    const m = await import("@/integrations/supabase/client");
+    const { data } = await m.supabase.auth.getSession();
+    return data.session?.access_token || null;
+  } catch (err) {
+    console.error("Failed to get admin session access token:", err);
+    return null;
+  }
 }
 
 async function syncFromCloud(force = false) {
   if (typeof window === "undefined") return;
   if (syncPromise) {
-    await syncPromise;
+    try {
+      await syncPromise;
+    } catch {
+      // Ignore nested sync failures
+    }
     if (!force) return;
   }
   if (!force && lastSyncAt && Date.now() - lastSyncAt < 30_000) return;
-  syncPromise = syncFromCloudInternal().finally(() => {
+  syncPromise = (async () => {
+    try {
+      await syncFromCloudInternal();
+    } catch (err) {
+      console.error("syncFromCloud failed with error:", err);
+    }
+  })().finally(() => {
     lastSyncAt = Date.now();
     syncPromise = null;
   });
@@ -302,7 +320,8 @@ async function syncFromCloudInternal() {
     cloudHydrated = true;
     await persistNow();
     listeners.forEach((l) => l());
-  } catch {
+  } catch (err) {
+    console.error("syncFromCloudInternal failed:", err);
     // Network failure: keep whatever we already have. Do not destructively
     // overwrite local state on error.
   }
