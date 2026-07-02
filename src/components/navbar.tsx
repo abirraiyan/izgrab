@@ -69,8 +69,8 @@ export function Navbar() {
           <img
             src={izLogo}
             alt="IZ Patisserie & Cafe"
-            width={200}
-            height={240}
+            width={190}
+            height={194}
             loading="eager"
             fetchPriority="high"
             decoding="async"

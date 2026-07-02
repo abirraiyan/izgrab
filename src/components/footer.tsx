@@ -12,8 +12,8 @@ export function Footer() {
           <img
             src={izLogo}
             alt="IZ Patisserie & Cafe"
-            width={200}
-            height={240}
+            width={190}
+            height={194}
             loading="lazy"
             decoding="async"
             className="h-[92px] sm:h-[104px] w-auto mb-4 object-contain"
