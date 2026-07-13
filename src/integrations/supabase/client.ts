@@ -6,12 +6,30 @@ function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
   let SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const SUPABASE_PUBLISHABLE_KEY =
+  let SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
 
   // Strip trailing '/rest/v1' or '/rest/v1/' if present
   if (SUPABASE_URL) {
     SUPABASE_URL = SUPABASE_URL.replace(/\/rest\/v1\/?$/, "");
+  }
+
+  // Dynamic fallback for production mode when environment variables are missing or misconfigured.
+  // If running in a browser on a non-local domain (e.g. Vercel production/preview), default to the live production database.
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.");
+    if (!isLocalhost) {
+      const isPlaceholderOrLocal =
+        !SUPABASE_URL ||
+        SUPABASE_URL.includes("placeholder-project") ||
+        SUPABASE_URL.includes("localhost") ||
+        SUPABASE_URL.includes("127.0.0.1");
+      if (isPlaceholderOrLocal) {
+        SUPABASE_URL = "https://ikngjhpguvlmstztaxwt.supabase.co";
+        SUPABASE_PUBLISHABLE_KEY = "sb_publishable_G7NuyHjprzjoYpgR-w4a4g_cC7t_4To";
+      }
+    }
   }
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
