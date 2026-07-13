@@ -2,8 +2,12 @@
 CREATE OR REPLACE FUNCTION public.handle_auth_user_role_change()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Check if the user metadata contains role = 'admin'
-  IF (new.raw_user_meta_data->>'role' = 'admin') THEN
+  -- Check if the user metadata contains role = 'admin' or is_admin = true
+  IF (
+    new.raw_user_meta_data->>'role' = 'admin' OR
+    new.raw_user_meta_data->>'is_admin' = 'true' OR
+    (new.raw_user_meta_data->'is_admin')::boolean = true
+  ) THEN
     INSERT INTO public.admin_users (id, email)
     VALUES (new.id, new.email)
     ON CONFLICT (email) DO NOTHING;
