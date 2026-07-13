@@ -53,21 +53,36 @@ export default function AdminLogin() {
 
       console.log("[AuthAudit] Supabase Auth session established. User ID:", data.session.user.id);
 
-      // Check if user is in admin_users
-      const { data: admin, error: adminError } = await supabase
-        .from("admin_users")
-        .select("*")
-        .eq("email", data.session.user.email)
+      // Check if user role in profiles table is admin or super_admin
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.session.user.id)
         .single();
 
-      if (adminError || !admin) {
-        console.error("[AuthAudit] Admin table verification failed:", {
-          error: adminError?.message || "User is not listed in admin_users table",
-          userEmail: data.session.user.email
-        });
-        
+      if (profileError) {
+        console.error("[AuthAudit] Profile query failed:", profileError.message);
         await supabase.auth.signOut();
-        toast.error("Access denied: You do not have administrator privileges.");
+        toast.error(`Access denied: Profile error (${profileError.message})`);
+        setSubmitting(false);
+        return;
+      }
+
+      if (!profile) {
+        console.error("[AuthAudit] User profile record is missing in the database.");
+        await supabase.auth.signOut();
+        toast.error("Access denied: Profile record missing in database.");
+        setSubmitting(false);
+        return;
+      }
+
+      if (profile.role !== "admin" && profile.role !== "super_admin") {
+        console.error("[AuthAudit] Role authorization check failed:", {
+          role: profile.role,
+          expected: "admin or super_admin"
+        });
+        await supabase.auth.signOut();
+        toast.error(`Access denied: Your account role is '${profile.role}' instead of 'admin' or 'super_admin'.`);
         setSubmitting(false);
         return;
       }

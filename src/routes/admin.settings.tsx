@@ -657,7 +657,7 @@ export default function SettingsAdmin() {
 }
 
 function AdminUsersManager() {
-  const [admins, setAdmins] = useState<{ id: string; email: string; created_at: string }[]>([]);
+  const [admins, setAdmins] = useState<{ id: string; email: string; role: string; created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -667,8 +667,9 @@ function AdminUsersManager() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("admin_users")
-        .select("*")
+        .from("profiles")
+        .select("id, email, role, created_at")
+        .in("role", ["admin", "super_admin"])
         .order("created_at", { ascending: false });
       
       if (error) throw error;
@@ -827,8 +828,17 @@ function AdminUsersManager() {
               {admins.map((admin) => (
                 <div key={admin.id} className="flex items-center justify-between p-4 hover:bg-muted/10 transition">
                   <div>
-                    <p className="text-sm font-semibold text-cocoa">{admin.email}</p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-cocoa">{admin.email}</p>
+                      <span className={`px-2 py-0.5 text-[9px] rounded-full font-bold uppercase tracking-wider ${
+                        admin.role === "super_admin" 
+                          ? "bg-destructive/10 text-destructive border border-destructive/20" 
+                          : "bg-cocoa/10 text-cocoa border border-cocoa/20"
+                      }`}>
+                        {admin.role.replace("_", " ")}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">
                       Created: {new Date(admin.created_at).toLocaleString()}
                     </p>
                   </div>

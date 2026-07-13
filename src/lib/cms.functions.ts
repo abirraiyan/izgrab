@@ -25,13 +25,13 @@ async function isAdminToken(token?: string | null) {
     } = await db().auth.getUser(token);
     if (authError || !user?.email) return false;
 
-    const { data: admin, error: dbError } = await db()
-      .from("admin_users")
-      .select("id")
-      .eq("email", user.email)
+    const { data: profile, error: dbError } = await db()
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
       .single();
 
-    return !dbError && !!admin;
+    return !dbError && profile && (profile.role === "admin" || profile.role === "super_admin");
   } catch {
     return false;
   }

@@ -48,16 +48,16 @@ serve(async (req) => {
     // Initialize admin client (using service role key)
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    // Verify caller is an administrator in the database
-    const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from("admin_users")
-      .select("*")
-      .eq("email", user.email)
+    // Verify caller is an administrator in the database (profiles table)
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
       .single();
 
-    if (adminError || !adminUser) {
+    if (profileError || !profile || (profile.role !== "admin" && profile.role !== "super_admin")) {
       return new Response(
-        JSON.stringify({ error: "Access Denied: You do not have administrator privileges" }),
+        JSON.stringify({ error: `Access Denied: Account role '${profile?.role || "none"}' does not have administrator privileges` }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

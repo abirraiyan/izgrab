@@ -7,17 +7,17 @@ export async function isAdmin() {
 
   if (!session?.user?.email) return false;
 
-  const { data: admin, error } = await supabase
-    .from("admin_users")
-    .select("*")
-    .eq("email", session.user.email)
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", session.user.id)
     .single();
 
-  if (error || !admin) {
+  if (error || !profile) {
     return false;
   }
 
-  return true;
+  return profile.role === "admin" || profile.role === "super_admin";
 }
 
 export async function logout() {
