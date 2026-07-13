@@ -1,85 +1,53 @@
-import { Mail, Phone, MapPin } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { useCms } from "@/lib/cms-store";
 import { SEO } from "@/components/seo";
 
+const WhatsAppIcon = () => (
+  <svg
+    className="w-5 h-5 fill-current"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+  </svg>
+);
+
 export default function Contact() {
   const { settings } = useCms();
-  const info = [
-    { icon: MapPin, t: "Visit us", d: settings.contact.address },
-    { icon: Phone, t: "Call us", d: `${settings.contact.phone}\n${settings.contact.hours}` },
-    {
-      icon: Mail,
-      t: "Email us",
-      d: `${settings.contact.email}\n${settings.contact.secondaryEmail}`,
-    },
-  ];
+  const rawPhone = settings.contact.phone || "+880 1700 000 000";
+  const waPhone = rawPhone.replace(/[^0-9]/g, "");
+
   return (
-    <div className="min-h-screen bg-background">
-      <SEO
-        title="Contact — IZ Patisserie"
-        description="Get in touch with IZ Patisserie for orders, custom cakes, and inquiries."
-      />
-      <Navbar />
-      <section className="container mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-xs tracking-[0.3em] uppercase text-rose-gold mb-4">Say hello</p>
-          <h1 className="font-serif text-4xl xs:text-5xl sm:text-6xl text-cocoa leading-[1.05]">
-            We'd love to hear from you
-          </h1>
-          <p className="mt-5 text-foreground/70">
-            Questions, custom orders, or just to say hi — we read every message.
-          </p>
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 max-w-5xl mx-auto">
-          <form className="space-y-4">
-            <input
-              type="text"
-              placeholder="Your name"
-              className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-cocoa"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-cocoa"
-            />
-            <input
-              type="text"
-              placeholder="Subject"
-              className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-cocoa"
-            />
-            <textarea
-              rows={6}
-              placeholder="Your message"
-              className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-cocoa resize-none"
-            />
-            <button
-              type="button"
-              className="w-full bg-cocoa text-cocoa-foreground py-4 rounded-full font-medium hover:opacity-90 transition"
+    <div className="min-h-screen bg-background flex flex-col justify-between">
+      <div>
+        <SEO
+          title="Contact — IZ Patisserie"
+          description="Get in touch with IZ Patisserie via WhatsApp for orders, custom cakes, and inquiries."
+        />
+        <Navbar />
+        <section className="container mx-auto px-4 sm:px-6 py-20 sm:py-28 flex items-center justify-center">
+          <div className="text-center max-w-xl w-full bg-card border border-border rounded-[32px] p-8 sm:p-12 shadow-soft">
+            <p className="text-xs tracking-[0.3em] uppercase text-rose-gold mb-4">Say hello</p>
+            <h1 className="font-serif text-4xl xs:text-5xl sm:text-5xl text-cocoa leading-[1.1] mb-6">
+              Contact Us
+            </h1>
+            <p className="text-sm sm:text-base text-foreground/75 leading-relaxed mb-8">
+              Chat with us on WhatsApp for orders, reservations, or general inquiries. Our team will be happy to assist you.
+            </p>
+            <a
+              href={`https://wa.me/${waPhone}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-[#25D366] text-white rounded-full text-base font-bold shadow-md hover:bg-[#20ba59] transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#25D366]/50"
+              aria-label="Chat on WhatsApp"
             >
-              Send message
-            </button>
-          </form>
-
-          <div className="space-y-6">
-            {info.map(({ icon: Icon, t, d }, i) => (
-              <div key={i} className="flex gap-5 p-6 bg-cream/60 rounded-3xl">
-                <div className="w-12 h-12 rounded-full bg-cocoa text-cocoa-foreground flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-serif text-xl text-cocoa mb-1">{t}</h3>
-                  <p className="text-sm text-foreground/70 whitespace-pre-line leading-relaxed">
-                    {d}
-                  </p>
-                </div>
-              </div>
-            ))}
+              <WhatsAppIcon />
+              <span>Chat on WhatsApp</span>
+            </a>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
       <Footer />
     </div>
   );
