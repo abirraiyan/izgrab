@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit2, Check, X, MapPin } from "lucide-react";
 import { cmsStore, useCms, type SiteSettings, type DeliveryArea } from "@/lib/cms-store";
+import { supabase } from "@/integrations/supabase/client";
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-cocoa focus:ring-1 focus:ring-cocoa";
@@ -10,7 +11,7 @@ const labelCls = "block text-xs font-semibold text-cocoa/80 block mb-1";
 
 export default function SettingsAdmin() {
   const { settings, deliveryAreas } = useCms();
-  const [activeTab, setActiveTab] = useState<"general" | "delivery">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "delivery" | "admins">("general");
 
   const [draft, setDraft] = useState<SiteSettings>(() => {
     const s = { ...settings };
@@ -143,6 +144,16 @@ export default function SettingsAdmin() {
             }`}
           >
             Delivery & Areas
+          </button>
+          <button
+            onClick={() => setActiveTab("admins")}
+            className={`px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition-all ${
+              activeTab === "admins"
+                ? "bg-cocoa text-cream shadow-soft"
+                : "text-cocoa/60 hover:text-cocoa"
+            }`}
+          >
+            Administrators
           </button>
         </div>
       </div>
@@ -641,6 +652,199 @@ export default function SettingsAdmin() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function AdminUsersManager() {
+  const [admins, setAdmins] = useState<{ id: string; email: string; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const fetchAdmins = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("admin_users")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setAdmins(data || []);
+    } catch (err: any) {
+      toast.error(`Failed to load administrators: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
+
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setCreating(true);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      
+      if (!token) throw new Error("No active session found");
+
+      let functionUrl = import.meta.env.VITE_SUPABASE_URL || "";
+      if (functionUrl) {
+        functionUrl = functionUrl.replace(/\/rest\/v1\/?$/, "");
+      }
+      functionUrl = `${functionUrl}/functions/v1/manage-users`;
+
+      const response = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
+        },
+        body: JSON.stringify({
+          action: "createUser",
+          payload: { email: email.trim(), password, is_admin: true }
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create administrator user");
+      }
+
+      toast.success(`Administrator user ${email} created successfully!`);
+      setEmail("");
+      setPassword("");
+      fetchAdmins();
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDeleteAdmin = async (id: string, email: string) => {
+    if (!confirm(`Are you sure you want to delete administrator "${email}"? This will completely remove their user account.`)) {
+      return;
+    }
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      
+      if (!token) throw new Error("No active session found");
+
+      let functionUrl = import.meta.env.VITE_SUPABASE_URL || "";
+      if (functionUrl) {
+        functionUrl = functionUrl.replace(/\/rest\/v1\/?$/, "");
+      }
+      functionUrl = `${functionUrl}/functions/v1/manage-users`;
+
+      const response = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
+        },
+        body: JSON.stringify({
+          action: "deleteUser",
+          payload: { id }
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete user");
+      }
+
+      toast.success(`Administrator ${email} removed successfully.`);
+      fetchAdmins();
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="md:col-span-1">
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+          <h3 className="font-serif text-lg text-cocoa">Create Admin User</h3>
+          <p className="text-xs text-muted-foreground">
+            This will create a new account in Supabase Authentication and automatically grant it administrative role.
+          </p>
+          <form onSubmit={handleCreateAdmin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-cocoa/80 mb-1">Email Address</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="newadmin@example.com"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-cocoa focus:ring-1 focus:ring-cocoa"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-cocoa/80 mb-1">Password</label>
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-cocoa focus:ring-1 focus:ring-cocoa"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={creating || !email || !password}
+              className="w-full bg-cocoa text-cream py-2.5 rounded-full text-xs font-semibold hover:opacity-90 transition disabled:opacity-50"
+            >
+              {creating ? "Creating Account..." : "Create Admin Account"}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="md:col-span-2">
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+          <h3 className="font-serif text-lg text-cocoa">Active Administrators</h3>
+          {loading ? (
+            <p className="text-xs text-muted-foreground animate-pulse">Loading administrator list...</p>
+          ) : admins.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No administrators found.</p>
+          ) : (
+            <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background">
+              {admins.map((admin) => (
+                <div key={admin.id} className="flex items-center justify-between p-4 hover:bg-muted/10 transition">
+                  <div>
+                    <p className="text-sm font-semibold text-cocoa">{admin.email}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Created: {new Date(admin.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteAdmin(admin.id, admin.email)}
+                    className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition cursor-pointer"
+                    aria-label={`Delete ${admin.email}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

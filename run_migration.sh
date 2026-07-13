@@ -10,3 +10,7 @@ fi
 echo "Connecting and applying migration to Supabase using pooler connection..."
 # Run the migration using the pooler port 6543
 npx supabase db query --db-url "postgresql://postgres.ikngjhpguvlmstztaxwt:$DB_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres" -f "./supabase/migrations/20260713180000_sync_auth_admin_trigger.sql"
+
+echo "Deploying the manage-users Edge Function..."
+npx supabase functions deploy manage-users --project-ref ikngjhpguvlmstztaxwt --use-api
+
