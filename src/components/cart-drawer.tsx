@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
 import { cartStore, useCart, itemKey } from "@/lib/cart-store";
+import { getCloudinaryUrl } from "@/lib/cloudinary";
 
 export function CartDrawer() {
   const cart = useCart();
@@ -56,7 +57,7 @@ export function CartDrawer() {
                 return (
                   <li key={k} className="py-4 flex gap-4">
                     <img
-                      src={i.image}
+                      src={getCloudinaryUrl(i.image, { width: 150, height: 150 })}
                       alt={i.name}
                       className="w-20 h-20 rounded-xl object-cover"
                       loading="lazy"

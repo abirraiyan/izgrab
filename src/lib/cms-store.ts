@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { products as defaultProducts, type Product } from "@/lib/products";
-import heroCake from "@/assets/iz-hero-cake.jpg";
-import heroPastries from "@/assets/iz-macarons.jpg";
-import heroInterior from "@/assets/iz-interior.jpg";
+const heroCake = '{"public_id":"iz-grab/hero/vhpimdhointvucfo0fqf","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983349/iz-grab/hero/vhpimdhointvucfo0fqf.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
+const heroPastries = '{"public_id":"iz-grab/hero/rvhmqcafnljmii98f1uv","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983351/iz-grab/hero/rvhmqcafnljmii98f1uv.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
+const heroInterior = '{"public_id":"iz-grab/hero/ikf5z63s6e10ewjrj2iq","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983350/iz-grab/hero/ikf5z63s6e10ewjrj2iq.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
 import { idbGet, idbSet } from "@/lib/cms-storage";
 import {
   getCmsState,
@@ -401,12 +401,22 @@ export const cmsStore = {
     });
     await persistNow();
     const adminToken = await getAdminToken();
-    await saveProductRecord({ data: { adminToken, product: p } });
+    try {
+      await saveProductRecord({ data: { adminToken, product: p } });
+    } catch (err) {
+      console.warn("Supabase upsertProduct failed, falling back to local cache:", err);
+    }
     await syncFromCloud(true);
   },
   removeProduct(slug: string) {
     setState((s) => ({ ...s, products: s.products.filter((p) => p.slug !== slug) }));
-    void getAdminToken().then((adminToken) => removeProductRecord({ data: { adminToken, slug } }));
+    void getAdminToken().then(async (adminToken) => {
+      try {
+        await removeProductRecord({ data: { adminToken, slug } });
+      } catch (err) {
+        console.warn("Supabase removeProduct failed, falling back to local cache:", err);
+      }
+    });
   },
 
   // Slides
@@ -424,12 +434,22 @@ export const cmsStore = {
     });
     await persistNow();
     const adminToken = await getAdminToken();
-    await saveSlideRecord({ data: { adminToken, slide, sortOrder } });
+    try {
+      await saveSlideRecord({ data: { adminToken, slide, sortOrder } });
+    } catch (err) {
+      console.warn("Supabase upsertSlide failed, falling back to local cache:", err);
+    }
     await syncFromCloud(true);
   },
   removeSlide(id: string) {
     setState((s) => ({ ...s, slides: s.slides.filter((x) => x.id !== id) }));
-    void getAdminToken().then((adminToken) => removeSlideRecord({ data: { adminToken, id } }));
+    void getAdminToken().then(async (adminToken) => {
+      try {
+        await removeSlideRecord({ data: { adminToken, id } });
+      } catch (err) {
+        console.warn("Supabase removeSlide failed, falling back to local cache:", err);
+      }
+    });
   },
   moveSlide(id: string, dir: -1 | 1) {
     let ids: string[] = [];
@@ -443,16 +463,27 @@ export const cmsStore = {
       ids = arr.map((x) => x.id);
       return { ...s, slides: arr };
     });
-    if (ids.length)
-      void getAdminToken().then((adminToken) => saveSlideOrder({ data: { adminToken, ids } }));
+    if (ids.length) {
+      void getAdminToken().then(async (adminToken) => {
+        try {
+          await saveSlideOrder({ data: { adminToken, ids } });
+        } catch (err) {
+          console.warn("Supabase saveSlideOrder failed, falling back to local cache:", err);
+        }
+      });
+    }
   },
 
   // Settings
   updateSettings(patch: Partial<SiteSettings>) {
     setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
-    void getAdminToken().then((adminToken) =>
-      saveSettingsRecord({ data: { adminToken, settings: state.settings } }),
-    );
+    void getAdminToken().then(async (adminToken) => {
+      try {
+        await saveSettingsRecord({ data: { adminToken, settings: state.settings } });
+      } catch (err) {
+        console.warn("Supabase saveSettingsRecord failed, falling back to local cache:", err);
+      }
+    });
   },
 
   // Delivery Areas

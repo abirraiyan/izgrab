@@ -3,6 +3,7 @@ import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/products";
 import { cartStore } from "@/lib/cart-store";
+import { getCloudinaryUrl } from "@/lib/cloudinary";
 
 export function ProductCard({ product }: { product: Product }) {
   const quickAdd = (e: React.MouseEvent) => {
@@ -27,7 +28,7 @@ export function ProductCard({ product }: { product: Product }) {
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-muted">
         <img
-          src={product.image}
+          src={getCloudinaryUrl(product.image, { width: 500 })}
           alt={product.name}
           loading="lazy"
           decoding="async"
@@ -37,7 +38,7 @@ export function ProductCard({ product }: { product: Product }) {
         />
         {product.video && (
           <video
-            src={product.video}
+            src={getCloudinaryUrl(product.video)}
             muted
             loop
             playsInline

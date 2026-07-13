@@ -72,6 +72,8 @@ async function storeDataUrl(dataUrl: string, folder: string) {
 
 async function persistMedia(value: string | undefined, folder: string) {
   if (!value) return value;
+  // Cloudinary metadata - keep as is
+  if (value.startsWith("{")) return value;
   // New upload — base64 data URL needs to be stored.
   if (value.startsWith("data:")) return storeDataUrl(value, folder);
   // Already a stored reference — keep as is.
@@ -86,6 +88,7 @@ async function persistMedia(value: string | undefined, folder: string) {
 
 async function resolveMedia(value: string | null | undefined) {
   if (!value) return "";
+  if (value.startsWith("{")) return value; // Cloudinary metadata
   if (!value.startsWith("cms-media/")) return value;
   const path = value.replace(/^cms-media\//, "");
   const { data, error } = await db()

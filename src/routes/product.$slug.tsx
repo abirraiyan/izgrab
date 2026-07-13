@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/product-card";
 import { useCms } from "@/lib/cms-store";
 import { cartStore } from "@/lib/cart-store";
 import { SEO } from "@/components/seo";
+import { getCloudinaryUrl } from "@/lib/cloudinary";
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -74,7 +75,7 @@ export default function ProductPage() {
         <div className="space-y-4">
           <div className="aspect-square rounded-3xl overflow-hidden bg-muted shadow-soft">
             <img
-              src={product.image}
+              src={getCloudinaryUrl(product.image, { width: 800 })}
               alt={product.name}
               loading="eager"
               decoding="async"
@@ -88,7 +89,7 @@ export default function ProductPage() {
                 key={i}
                 className="aspect-square rounded-2xl overflow-hidden bg-muted border border-border hover:border-cocoa transition"
               >
-                <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                <img src={getCloudinaryUrl(img, { width: 200, height: 200 })} alt="" className="w-full h-full object-cover" loading="lazy" />
               </button>
             ))}
           </div>

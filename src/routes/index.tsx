@@ -7,12 +7,13 @@ import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { categories } from "@/lib/products";
 import { useCms } from "@/lib/cms-store";
-import heroCake from "@/assets/iz-hero-cake.jpg";
-import izCroissant from "@/assets/iz-croissant.jpg";
-import izCremeBrulee from "@/assets/iz-cremebrulee.jpg";
-import izLatte from "@/assets/iz-latte.jpg";
-import izPecanTart from "@/assets/iz-pecantart.jpg";
 import { SEO } from "@/components/seo";
+import { getCloudinaryUrl } from "@/lib/cloudinary";
+
+const izCroissant = '{"public_id":"iz-grab/products/gupfdi5jqjnh3mfmmicq","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983353/iz-grab/products/gupfdi5jqjnh3mfmmicq.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
+const izCremeBrulee = '{"public_id":"iz-grab/products/wvdzrvlxuarvt2xe5y9v","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983354/iz-grab/products/wvdzrvlxuarvt2xe5y9v.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
+const izLatte = '{"public_id":"iz-grab/products/xdymybbgygjpnm1snt8b","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983352/iz-grab/products/xdymybbgygjpnm1snt8b.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
+const izPecanTart = '{"public_id":"iz-grab/products/tposaf26ixv0rzbyf6ix","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983354/iz-grab/products/tposaf26ixv0rzbyf6ix.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
 
 // Stylized Vector Map of Dhaka with animations
 function DeliveryCoverageMap({
@@ -251,8 +252,8 @@ export default function Home() {
             >
               {s.video ? (
                 <video
-                  src={s.video}
-                  poster={s.image || undefined}
+                  src={getCloudinaryUrl(s.video)}
+                  poster={getCloudinaryUrl(s.image) || undefined}
                   autoPlay
                   muted
                   loop
@@ -262,7 +263,7 @@ export default function Home() {
                 />
               ) : (
                 <img
-                  src={s.image}
+                  src={getCloudinaryUrl(s.image)}
                   alt={s.title}
                   className="w-full h-full object-cover"
                   loading={i === 0 ? "eager" : "lazy"}
@@ -301,12 +302,6 @@ export default function Home() {
                     className="inline-flex items-center gap-1.5 bg-cream text-cocoa px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-blush transition-all"
                   >
                     Shop Now <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                  <Link
-                    to="/custom-cake"
-                    className="inline-flex items-center gap-1.5 border border-cream/70 text-cream px-5 py-2 rounded-full text-xs sm:text-sm font-medium hover:bg-cream hover:text-cocoa transition-all"
-                  >
-                    Customize Cake
                   </Link>
                 </div>
               </div>
@@ -457,7 +452,7 @@ export default function Home() {
               className="group relative rounded-2xl overflow-hidden bg-muted aspect-[4/5] shadow-soft"
             >
               <img
-                src={c.image}
+                src={getCloudinaryUrl(c.image, { width: 400 })}
                 alt={c.name}
                 loading="lazy"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -590,7 +585,7 @@ export default function Home() {
               className="relative aspect-square rounded-2xl overflow-hidden group bg-muted"
             >
               <img
-                src={img}
+                src={getCloudinaryUrl(img, { width: 300, height: 300 })}
                 alt="IZ Patisserie Instagram"
                 loading="lazy"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

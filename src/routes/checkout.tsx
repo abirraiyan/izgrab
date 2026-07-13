@@ -7,6 +7,7 @@ import { Footer } from "@/components/footer";
 import { cartStore, useCart, itemKey } from "@/lib/cart-store";
 import { cmsStore } from "@/lib/cms-store";
 import { SEO } from "@/components/seo";
+import { getCloudinaryUrl } from "@/lib/cloudinary";
 
 export default function CheckoutPage() {
   const cart = useCart();
@@ -187,7 +188,7 @@ export default function CheckoutPage() {
                   return (
                     <li key={k} className="py-3 flex gap-3">
                       <img
-                        src={i.image}
+                        src={getCloudinaryUrl(i.image, { width: 100, height: 100 })}
                         alt={i.name}
                         loading="lazy"
                         className="w-14 h-14 rounded-lg object-cover"

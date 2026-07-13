@@ -1,14 +1,8 @@
-import strawberry from "@/assets/product-strawberry.jpg";
-import chocolate from "@/assets/product-chocolate.jpg";
-import macarons from "@/assets/product-macarons.jpg";
-import brownie from "@/assets/product-brownie.jpg";
-import cheesecake from "@/assets/product-cheesecake.jpg";
-import giftbox from "@/assets/product-giftbox.jpg";
-import custom from "@/assets/product-custom.jpg";
-import izLatte from "@/assets/iz-latte.jpg";
-import izCroissant from "@/assets/iz-croissant.jpg";
-import izCremeBrulee from "@/assets/iz-cremebrulee.jpg";
-import izPecanTart from "@/assets/iz-pecantart.jpg";
+const strawberry = '{"public_id":"iz-grab/products/atqprsdoxxp9pqmdezen","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983351/iz-grab/products/atqprsdoxxp9pqmdezen.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
+const izLatte = '{"public_id":"iz-grab/products/xdymybbgygjpnm1snt8b","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983352/iz-grab/products/xdymybbgygjpnm1snt8b.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
+const izCroissant = '{"public_id":"iz-grab/products/gupfdi5jqjnh3mfmmicq","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983353/iz-grab/products/gupfdi5jqjnh3mfmmicq.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
+const izCremeBrulee = '{"public_id":"iz-grab/products/wvdzrvlxuarvt2xe5y9v","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983354/iz-grab/products/wvdzrvlxuarvt2xe5y9v.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
+const izPecanTart = '{"public_id":"iz-grab/products/tposaf26ixv0rzbyf6ix","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983354/iz-grab/products/tposaf26ixv0rzbyf6ix.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
 
 export type Product = {
   slug: string;

@@ -176,7 +176,7 @@ export default function AdminShell() {
 }
 
 type NavItem = {
-  to: "/admin" | "/admin/products" | "/admin/banners" | "/admin/orders" | "/admin/settings";
+  to: "/admin" | "/admin/products" | "/admin/banners" | "/admin/orders" | "/admin/settings" | "/admin/media";
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
@@ -186,6 +186,7 @@ const nav: NavItem[] = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/banners", label: "Hero Slides", icon: Images },
+  { to: "/admin/media", label: "Media Library", icon: Images },
   { to: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { to: "/admin/settings", label: "Site Settings", icon: SettingsIcon },
 ];

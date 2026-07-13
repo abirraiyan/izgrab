@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Plus, Trash2, X, Loader2 } from "lucide-react";
 import { cmsStore, fileToDataUrl, useCms, type HeroSlide } from "@/lib/cms-store";
+import { getCloudinaryUrl, uploadImage, uploadVideo } from "@/lib/cloudinary";
+import MediaLibrary from "./admin.media";
 
 const emptySlide: HeroSlide = {
   id: "",
@@ -46,8 +48,8 @@ export default function BannersAdmin() {
             <div className="aspect-[16/9] bg-muted relative">
               {s.video ? (
                 <video
-                  src={s.video}
-                  poster={s.image || undefined}
+                  src={getCloudinaryUrl(s.video)}
+                  poster={getCloudinaryUrl(s.image) || undefined}
                   muted
                   loop
                   playsInline
@@ -55,7 +57,7 @@ export default function BannersAdmin() {
                   className="w-full h-full object-cover"
                 />
               ) : s.image ? (
-                <img src={s.image} alt={s.title} className="w-full h-full object-cover" />
+                <img src={getCloudinaryUrl(s.image)} alt={s.title} className="w-full h-full object-cover" />
               ) : null}
               <div className="absolute inset-0 bg-gradient-to-r from-cocoa/70 to-transparent" />
               <div className="absolute inset-0 p-5 flex flex-col justify-end text-cream">
@@ -156,26 +158,45 @@ function SlideDrawer({
   const update = <K extends keyof HeroSlide>(k: K, v: HeroSlide[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
 
+  const [imageLoading, setImageLoading] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showVideoPicker, setShowVideoPicker] = useState(false);
+
   const onUploadImage = async (file: File) => {
     if (file.size > MAX_IMAGE_BYTES) {
       return toast.error(
-        `Image too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max ${MAX_IMAGE_BYTES / 1024 / 1024}MB — try compressing or paste a hosted URL.`,
+        `Image too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max ${MAX_IMAGE_BYTES / 1024 / 1024}MB.`,
       );
     }
-    const url = await fileToDataUrl(file);
-    update("image", url);
-    toast.success("Image attached");
+    setImageLoading(true);
+    try {
+      const metadata = await uploadImage(file, "iz-grab/hero");
+      update("image", JSON.stringify(metadata));
+      toast.success("Image uploaded to Cloudinary");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload image");
+    } finally {
+      setImageLoading(false);
+    }
   };
 
   const onUploadVideo = async (file: File) => {
     if (file.size > MAX_VIDEO_BYTES) {
       return toast.error(
-        `Video too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max ${MAX_VIDEO_BYTES / 1024 / 1024}MB — host on YouTube/Cloudinary/CDN and paste the URL instead.`,
+        `Video too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max ${MAX_VIDEO_BYTES / 1024 / 1024}MB.`,
       );
     }
-    const url = await fileToDataUrl(file);
-    update("video", url);
-    toast.success("Video attached — autoplays muted on the homepage");
+    setVideoLoading(true);
+    try {
+      const metadata = await uploadVideo(file, "iz-grab/hero");
+      update("video", JSON.stringify(metadata));
+      toast.success("Video uploaded to Cloudinary");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload video");
+    } finally {
+      setVideoLoading(false);
+    }
   };
 
   const submit = (e: React.FormEvent) => {
@@ -191,6 +212,28 @@ function SlideDrawer({
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-cocoa/40" onClick={onClose} />
+      {showImagePicker && (
+        <MediaLibrary
+          isPicker={true}
+          allowedType="image"
+          onClose={() => setShowImagePicker(false)}
+          onSelect={(meta) => {
+            update("image", JSON.stringify(meta));
+            setShowImagePicker(false);
+          }}
+        />
+      )}
+      {showVideoPicker && (
+        <MediaLibrary
+          isPicker={true}
+          allowedType="video"
+          onClose={() => setShowVideoPicker(false)}
+          onSelect={(meta) => {
+            update("video", JSON.stringify(meta));
+            setShowVideoPicker(false);
+          }}
+        />
+      )}
       <form onSubmit={submit} className="w-full max-w-xl bg-background h-full overflow-y-auto">
         <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <h3 className="font-serif text-xl text-cocoa">Edit slide</h3>
@@ -208,22 +251,34 @@ function SlideDrawer({
               </span>
             </span>
             <div className="flex items-center gap-4">
-              <div className="w-28 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0">
-                {draft.image && (
-                  <img src={draft.image} alt="" className="w-full h-full object-cover" />
+              <div className="w-28 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center border border-border">
+                {draft.image ? (
+                  <img src={getCloudinaryUrl(draft.image)} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[10px] text-muted-foreground">No image</span>
                 )}
               </div>
               <div className="space-y-2 flex-1">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => e.target.files?.[0] && onUploadImage(e.target.files[0])}
-                  className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-full file:border-0 file:bg-cocoa file:text-cocoa-foreground file:px-3 file:py-2 file:text-xs file:cursor-pointer"
-                />
+                <div className="flex flex-wrap gap-2 items-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={imageLoading}
+                    onChange={(e) => e.target.files?.[0] && onUploadImage(e.target.files[0])}
+                    className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-full file:border-0 file:bg-cocoa file:text-cocoa-foreground file:px-3 file:py-2 file:text-xs file:cursor-pointer disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowImagePicker(true)}
+                    className="px-3 py-1.5 rounded-full border border-border text-[10px] hover:border-cocoa whitespace-nowrap bg-background text-cocoa"
+                  >
+                    Choose from Library
+                  </button>
+                </div>
                 <input
                   type="url"
                   placeholder="…or paste image URL"
-                  value={draft.image.startsWith("data:") ? "" : draft.image}
+                  value={draft.image.startsWith("{") ? "" : draft.image}
                   onChange={(e) => update("image", e.target.value)}
                   className={inputCls}
                 />
@@ -239,10 +294,10 @@ function SlideDrawer({
               </span>
             </span>
             <div className="flex items-center gap-4">
-              <div className="w-28 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center">
+              <div className="w-28 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center border border-border">
                 {draft.video ? (
                   <video
-                    src={draft.video}
+                    src={getCloudinaryUrl(draft.video)}
                     muted
                     loop
                     playsInline
@@ -254,17 +309,27 @@ function SlideDrawer({
                 )}
               </div>
               <div className="space-y-2 flex-1">
-                <input
-                  type="file"
-                  accept="video/mp4,video/webm,video/*"
-                  onChange={(e) => e.target.files?.[0] && onUploadVideo(e.target.files[0])}
-                  className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-full file:border-0 file:bg-cocoa file:text-cocoa-foreground file:px-3 file:py-2 file:text-xs file:cursor-pointer"
-                />
+                <div className="flex flex-wrap gap-2 items-center">
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/*"
+                    disabled={videoLoading}
+                    onChange={(e) => e.target.files?.[0] && onUploadVideo(e.target.files[0])}
+                    className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-full file:border-0 file:bg-cocoa file:text-cocoa-foreground file:px-3 file:py-2 file:text-xs file:cursor-pointer disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowVideoPicker(true)}
+                    className="px-3 py-1.5 rounded-full border border-border text-[10px] hover:border-cocoa whitespace-nowrap bg-background text-cocoa"
+                  >
+                    Choose from Library
+                  </button>
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="url"
                     placeholder="…or paste hosted video URL (.mp4 / .webm)"
-                    value={draft.video?.startsWith("data:") ? "" : (draft.video ?? "")}
+                    value={draft.video?.startsWith("{") ? "" : (draft.video ?? "")}
                     onChange={(e) => update("video", e.target.value)}
                     className={inputCls}
                   />
@@ -278,9 +343,8 @@ function SlideDrawer({
                     </button>
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Tip: short, silent loops (5–15s, ≤25MB) work best. For longer or HD clips, host on
-                  a CDN and paste the URL.
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+                  Tip: short, silent loops work best.
                 </p>
               </div>
             </div>
