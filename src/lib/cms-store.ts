@@ -75,6 +75,12 @@ export type DeliveryArea = {
   map_y: number;
 };
 
+export type DeveloperCreditSettings = {
+  text: string;
+  url: string;
+  enabled: boolean;
+};
+
 export type SiteSettings = {
   announcements: string[];
   contact: {
@@ -87,6 +93,7 @@ export type SiteSettings = {
   footerTagline: string;
   socials: { instagram: string; facebook: string; email: string };
   deliveryCoverage: DeliveryCoverageSettings;
+  developerCredit?: DeveloperCreditSettings;
 };
 
 type State = {
@@ -169,6 +176,11 @@ const defaultSettings: SiteSettings = {
         description: "Freshly baked daily using premium ingredients."
       }
     ]
+  },
+  developerCredit: {
+    text: "Built by Xceptionist",
+    url: "https://xceptionist.com/",
+    enabled: true,
   }
 };
 
@@ -184,6 +196,7 @@ function mergeSettings(parsed: Partial<SiteSettings> | null | undefined): SiteSe
   const merged = { ...defaultSettings, ...(parsed || {}) };
   merged.contact = { ...defaultSettings.contact, ...(parsed?.contact || {}) };
   merged.socials = { ...defaultSettings.socials, ...(parsed?.socials || {}) };
+  merged.developerCredit = { ...defaultSettings.developerCredit, ...(parsed?.developerCredit || {}) };
   merged.deliveryCoverage = {
     ...defaultSettings.deliveryCoverage,
     ...(parsed?.deliveryCoverage || {}),

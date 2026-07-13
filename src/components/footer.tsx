@@ -117,10 +117,30 @@ export function Footer() {
       </div>
       <div className="border-t border-border">
         <div className="container mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-muted-foreground">
-          <p className="flex items-center gap-1.5">
+          <p className="flex items-center gap-1.5 flex-wrap justify-center sm:justify-start">
             <span>
               © {new Date().getFullYear()} IZ Patisserie & Cafe. Crafted with skill and visuals.
             </span>
+            {settings.developerCredit?.enabled && (() => {
+              const text = settings.developerCredit.text || "Built by Xceptionist";
+              const match = text.match(/^(Built\s+by\s+)?(.*)$/i);
+              const prefix = match?.[1] || "Built by ";
+              const linkText = match?.[2] || "Xceptionist";
+              return (
+                <span className="text-[11px] text-muted-foreground/80">
+                  {" | "}
+                  {prefix}
+                  <a
+                    href={settings.developerCredit.url || "https://xceptionist.com/"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-cocoa transition-colors underline underline-offset-2 font-medium"
+                  >
+                    {linkText}
+                  </a>
+                </span>
+              );
+            })()}
             <Link
               to="/admin"
               aria-label="Admin panel"
@@ -132,13 +152,10 @@ export function Footer() {
           </p>
           <div className="flex gap-5 tracking-[0.2em] uppercase">
             <a href="#" className="hover:text-cocoa">
-              Twitter
+              FaceBook
             </a>
             <a href="#" className="hover:text-cocoa">
               Instagram
-            </a>
-            <a href="#" className="hover:text-cocoa">
-              Pinterest
             </a>
           </div>
         </div>

@@ -68,11 +68,19 @@ export default function SettingsAdmin() {
     deliveryCoverage: { ...d.deliveryCoverage, [k]: v }
   }));
 
-  const updateDeliveryFeature = (index: number, key: "title" | "description", val: string) => {
-    const nextFeats = [...draft.deliveryCoverage.features];
-    nextFeats[index] = { ...nextFeats[index], [key]: val };
-    updateDelivery("features", nextFeats);
-  };
+  const updateDeveloperCredit = <K extends keyof NonNullable<SiteSettings["developerCredit"]>>(
+    k: K,
+    v: NonNullable<SiteSettings["developerCredit"]>[K],
+  ) => setDraft((d) => ({
+    ...d,
+    developerCredit: {
+      text: "Built by Xceptionist",
+      url: "https://xceptionist.com/",
+      enabled: true,
+      ...(d.developerCredit || {}),
+      [k]: v
+    }
+  }));
 
   const saveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,6 +218,44 @@ export default function SettingsAdmin() {
               onChange={(e) => update("footerTagline", e.target.value)}
               className={inputCls + " resize-none"}
             />
+          </Card>
+
+          {/* Developer Credit */}
+          <Card title="Developer credit">
+            <div className="space-y-4">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={draft.developerCredit?.enabled ?? true}
+                  onChange={(e) => updateDeveloperCredit("enabled", e.target.checked)}
+                  className="rounded border-border text-cocoa focus:ring-cocoa"
+                />
+                <span className="text-xs font-semibold text-cocoa/80">Enable developer credit in footer</span>
+              </label>
+
+              {(draft.developerCredit?.enabled ?? true) && (
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Field label="Display text">
+                    <input
+                      type="text"
+                      value={draft.developerCredit?.text ?? "Built by Xceptionist"}
+                      onChange={(e) => updateDeveloperCredit("text", e.target.value)}
+                      className={inputCls}
+                      placeholder="Built by Xceptionist"
+                    />
+                  </Field>
+                  <Field label="Link URL">
+                    <input
+                      type="url"
+                      value={draft.developerCredit?.url ?? "https://xceptionist.com/"}
+                      onChange={(e) => updateDeveloperCredit("url", e.target.value)}
+                      className={inputCls}
+                      placeholder="https://xceptionist.com/"
+                    />
+                  </Field>
+                </div>
+              )}
+            </div>
           </Card>
 
           {/* Contact */}
