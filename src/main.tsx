@@ -22,6 +22,7 @@ const ProductPage = lazy(() => import("./routes/product.$slug"));
 const AdminShell = lazy(() => import("./routes/admin"));
 const AdminIndex = lazy(() => import("./routes/admin.index"));
 const AdminProducts = lazy(() => import("./routes/admin.products"));
+const AdminCategories = lazy(() => import("./routes/admin.categories"));
 const AdminBanners = lazy(() => import("./routes/admin.banners"));
 const AdminOrders = lazy(() => import("./routes/admin.orders"));
 const AdminSettings = lazy(() => import("./routes/admin.settings"));
@@ -53,6 +54,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/admin" element={<AdminShell />}>
             <Route index element={<AdminIndex />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="categories" element={<AdminCategories />} />
             <Route path="banners" element={<AdminBanners />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="settings" element={<AdminSettings />} />

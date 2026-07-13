@@ -9,6 +9,7 @@ import {
   LogOut,
   Home,
   AlertCircle,
+  Folder,
 } from "lucide-react";
 import { isAdmin, logout } from "@/lib/admin-auth";
 import { useCms } from "@/lib/cms-store";
@@ -176,7 +177,7 @@ export default function AdminShell() {
 }
 
 type NavItem = {
-  to: "/admin" | "/admin/products" | "/admin/banners" | "/admin/orders" | "/admin/settings" | "/admin/media";
+  to: "/admin" | "/admin/products" | "/admin/categories" | "/admin/banners" | "/admin/orders" | "/admin/settings" | "/admin/media";
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
@@ -185,6 +186,7 @@ type NavItem = {
 const nav: NavItem[] = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/admin/products", label: "Products", icon: Package },
+  { to: "/admin/categories", label: "Categories", icon: Folder },
   { to: "/admin/banners", label: "Hero Slides", icon: Images },
   { to: "/admin/media", label: "Media Library", icon: Images },
   { to: "/admin/orders", label: "Orders", icon: ShoppingCart },

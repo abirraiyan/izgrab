@@ -17,6 +17,8 @@ import {
   updateOrderStatusRecord,
   saveDeliveryAreaRecord,
   removeDeliveryAreaRecord,
+  saveCategoryRecord,
+  removeCategoryRecord,
 } from "@/lib/cms.functions";
 
 export type HeroSlide = {
@@ -96,12 +98,25 @@ export type SiteSettings = {
   developerCredit?: DeveloperCreditSettings;
 };
 
+export type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
+  show_on_homepage: boolean;
+  show_in_menu: boolean;
+  is_archived: boolean;
+};
+
 type State = {
   products: Product[];
   slides: HeroSlide[];
   settings: SiteSettings;
   orders: Order[];
   deliveryAreas: DeliveryArea[];
+  categories: Category[];
 };
 
 const STORAGE_KEY = "iz-cms-v1";
@@ -184,12 +199,21 @@ const defaultSettings: SiteSettings = {
   }
 };
 
+const defaultCategories: Category[] = [
+  { id: "c1", name: "Cakes", slug: "cakes", description: "Delicious hand-crafted cakes", sort_order: 1, is_active: true, show_on_homepage: true, show_in_menu: true, is_archived: false },
+  { id: "c2", name: "Coffee", slug: "coffee", description: "Freshly brewed artisan coffee", sort_order: 2, is_active: true, show_on_homepage: true, show_in_menu: true, is_archived: false },
+  { id: "c3", name: "Croissants", slug: "croissants", description: "Flaky French croissants", sort_order: 3, is_active: true, show_on_homepage: true, show_in_menu: true, is_archived: false },
+  { id: "c4", name: "Meals", slug: "meals", description: "Hearty comforting meals", sort_order: 4, is_active: true, show_on_homepage: true, show_in_menu: true, is_archived: false },
+  { id: "c5", name: "Desserts", slug: "desserts", description: "Artisan desserts and pastries", sort_order: 5, is_active: true, show_on_homepage: true, show_in_menu: true, is_archived: false },
+];
+
 const defaultState: State = {
   products: defaultProducts,
   slides: defaultSlides,
   settings: defaultSettings,
   orders: [],
   deliveryAreas: [],
+  categories: defaultCategories,
 };
 
 function mergeSettings(parsed: Partial<SiteSettings> | null | undefined): SiteSettings {
@@ -215,6 +239,7 @@ function buildState(
   const products = parsed?.products;
   const slides = parsed?.slides;
   const deliveryAreas = parsed?.deliveryAreas;
+  const categories = parsed?.categories;
   return {
     products:
       products && products.length > 0 ? products : useDefaultsForEmpty ? defaultProducts : [],
@@ -222,6 +247,12 @@ function buildState(
     settings: mergeSettings(parsed?.settings),
     orders: parsed?.orders || [],
     deliveryAreas: deliveryAreas || [],
+    categories:
+      categories && categories.length > 0
+        ? categories
+        : useDefaultsForEmpty
+        ? defaultCategories
+        : [],
   };
 }
 
@@ -547,6 +578,63 @@ export const cmsStore = {
   removeOrder(id: string) {
     setState((s) => ({ ...s, orders: s.orders.filter((o) => o.id !== id) }));
     void getAdminToken().then((adminToken) => removeOrderRecord({ data: { adminToken, id } }));
+  },
+
+  // Categories
+  async upsertCategory(c: Category) {
+    setState((s) => {
+      const exists = s.categories.some((x) => x.id === c.id);
+      return {
+        ...s,
+        categories: exists ? s.categories.map((x) => (x.id === c.id ? c : x)) : [...s.categories, c],
+      };
+    });
+    await persistNow();
+    const adminToken = await getAdminToken();
+    try {
+      await saveCategoryRecord({ data: { adminToken, category: c } });
+    } catch (err) {
+      console.warn("Supabase upsertCategory failed, falling back to local cache:", err);
+    }
+    await syncFromCloud(true);
+  },
+  removeCategory(id: string) {
+    setState((s) => ({ ...s, categories: s.categories.filter((c) => c.id !== id) }));
+    void getAdminToken().then(async (adminToken) => {
+      try {
+        await removeCategoryRecord({ data: { adminToken, id } });
+      } catch (err) {
+        console.warn("Supabase removeCategory failed, falling back to local cache:", err);
+      }
+    });
+  },
+  async moveCategory(id: string, dir: -1 | 1) {
+    let nextCats = [...state.categories];
+    const idx = nextCats.findIndex((c) => c.id === id);
+    if (idx === -1) return;
+    const targetIdx = idx + dir;
+    if (targetIdx < 0 || targetIdx >= nextCats.length) return;
+
+    // Swap sort_order
+    const temp = nextCats[idx];
+    nextCats[idx] = nextCats[targetIdx];
+    nextCats[targetIdx] = temp;
+
+    // Re-assign sort_orders sequentially
+    nextCats = nextCats.map((c, i) => ({ ...c, sort_order: i + 1 }));
+
+    setState((s) => ({ ...s, categories: nextCats }));
+    await persistNow();
+
+    const adminToken = await getAdminToken();
+    try {
+      await Promise.all(
+        nextCats.map((c) => saveCategoryRecord({ data: { adminToken, category: c } }))
+      );
+    } catch (err) {
+      console.warn("Supabase moveCategory failed, falling back to local cache:", err);
+    }
+    await syncFromCloud(true);
   },
 
   resetAll() {

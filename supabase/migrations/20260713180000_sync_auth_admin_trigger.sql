@@ -134,3 +134,45 @@ WHERE (
   (raw_user_meta_data->'is_admin')::boolean = true
 )
 ON CONFLICT (email) DO NOTHING;
+
+-- 10. Create cms_categories table
+CREATE TABLE IF NOT EXISTS public.cms_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  description TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  show_on_homepage BOOLEAN NOT NULL DEFAULT true,
+  show_in_menu BOOLEAN NOT NULL DEFAULT true,
+  is_archived BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE public.cms_categories ENABLE ROW LEVEL SECURITY;
+
+-- Policies for cms_categories
+DROP POLICY IF EXISTS "Allow public read access to active categories" ON public.cms_categories;
+CREATE POLICY "Allow public read access to active categories" ON public.cms_categories
+  FOR SELECT USING (is_active = true AND is_archived = false);
+
+DROP POLICY IF EXISTS "Allow admins full CRUD on categories" ON public.cms_categories;
+CREATE POLICY "Allow admins full CRUD on categories" ON public.cms_categories
+  FOR ALL TO authenticated USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND (role = 'admin' OR role = 'super_admin')
+    )
+  );
+
+-- Seed default categories if they don't exist
+INSERT INTO public.cms_categories (name, slug, sort_order, show_on_homepage, show_in_menu)
+VALUES
+  ('Cakes', 'cakes', 1, true, true),
+  ('Coffee', 'coffee', 2, true, true),
+  ('Croissants', 'croissants', 3, true, true),
+  ('Meals', 'meals', 4, true, true),
+  ('Desserts', 'desserts', 5, true, true)
+ON CONFLICT (slug) DO NOTHING;

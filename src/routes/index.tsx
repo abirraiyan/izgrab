@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
-import { categories } from "@/lib/products";
 import { useCms } from "@/lib/cms-store";
 import { SEO } from "@/components/seo";
 import { getCloudinaryUrl } from "@/lib/cloudinary";
@@ -138,7 +137,8 @@ function DeliveryCoverageMap({
 }
 
 export default function Home() {
-  const { products, slides, settings, deliveryAreas } = useCms();
+  const { products, slides, settings, deliveryAreas, categories } = useCms();
+  const activeCategories = categories.filter((c) => c.is_active && c.show_on_homepage && !c.is_archived);
   const igUrl = settings.socials.instagram || "https://www.instagram.com/izpatisserieandcafe/";
   const igHandle = (() => {
     try {
@@ -443,28 +443,23 @@ export default function Home() {
       </div>
 
       {/* CATEGORIES — editorial row */}
-      <section className="container mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          {categories.map((c) => (
-            <Link
-              key={c.slug}
-              to="/shop"
-              className="group relative rounded-2xl overflow-hidden bg-muted aspect-[4/5] shadow-soft"
-            >
-              <img
-                src={getCloudinaryUrl(c.image, { width: 400 })}
-                alt={c.name}
-                loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-cocoa/65 via-cocoa/0 to-transparent" />
-              <span className="absolute bottom-3 left-3 bg-cream/90 backdrop-blur text-cocoa text-[11px] font-medium tracking-wide px-3 py-1 rounded-full">
-                {c.name}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {activeCategories.length > 0 && (
+        <section className="container mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            {activeCategories.map((c) => (
+              <Link
+                key={c.slug}
+                to={`/shop?category=${c.slug}`}
+                className="group flex items-center justify-center rounded-2xl bg-cream border border-cocoa/10 aspect-[4/5] shadow-soft hover:bg-cocoa hover:border-cocoa hover:shadow-md transition-all duration-300"
+              >
+                <span className="text-center font-serif text-base sm:text-lg text-cocoa group-hover:text-cream font-medium tracking-wide px-4">
+                  {c.name}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* HOT PICKS — horizontal carousel */}
       <section className="bg-cream/40 mt-12 sm:mt-16 py-14 sm:py-20 border-y border-border/60">

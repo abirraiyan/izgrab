@@ -159,7 +159,7 @@ export async function verifyAdminSession({ data }: { data: { token?: string | nu
 }
 
 export async function getCmsState({ data }: { data: { adminToken?: string | null } }) {
-  const [productsRes, slidesRes, settingsRes] = await Promise.all([
+  const [productsRes, slidesRes, settingsRes, categoriesRes] = await Promise.all([
     db()
       .from("cms_products")
       .select("*")
@@ -171,6 +171,10 @@ export async function getCmsState({ data }: { data: { adminToken?: string | null
       .eq("is_active", true)
       .order("sort_order", { ascending: true }),
     db().from("cms_site_settings").select("*").eq("key", "main").maybeSingle(),
+    db()
+      .from("cms_categories")
+      .select("*")
+      .order("sort_order", { ascending: true }),
   ]);
 
   const adminToken = data.adminToken;
@@ -286,13 +290,62 @@ export async function getCmsState({ data }: { data: { adminToken?: string | null
     deliveryAreas = defaultAreas;
   }
 
+  const categories = (categoriesRes.data || []).map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description || "",
+    sort_order: row.sort_order,
+    is_active: row.is_active,
+    show_on_homepage: row.show_on_homepage,
+    show_in_menu: row.show_in_menu,
+    is_archived: row.is_archived,
+  }));
+
   return {
     products,
     slides,
     settings: settingsRes.data ? settingsFromRow(settingsRes.data) : null,
     orders: (ordersRes.data || []).map(orderFromRow),
     deliveryAreas,
+    categories,
   } satisfies any;
+}
+
+export async function saveCategoryRecord({
+  data,
+}: {
+  data: { adminToken?: string | null; category: any };
+}) {
+  await requireAdmin(data.adminToken);
+  const { error } = await db()
+    .from("cms_categories")
+    .upsert({
+      id: data.category.id || undefined,
+      name: data.category.name,
+      slug: data.category.slug,
+      description: data.category.description || null,
+      sort_order: data.category.sort_order,
+      is_active: data.category.is_active,
+      show_on_homepage: data.category.show_on_homepage,
+      show_in_menu: data.category.show_in_menu,
+      is_archived: data.category.is_archived,
+      updated_at: new Date().toISOString(),
+    });
+  if (error) throw error;
+}
+
+export async function removeCategoryRecord({
+  data,
+}: {
+  data: { adminToken?: string | null; id: string };
+}) {
+  await requireAdmin(data.adminToken);
+  const { error } = await db()
+    .from("cms_categories")
+    .delete()
+    .eq("id", data.id);
+  if (error) throw error;
 }
 
 export async function saveProductRecord({

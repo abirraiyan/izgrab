@@ -2,15 +2,33 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { useCms } from "@/lib/cms-store";
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { SEO } from "@/components/seo";
 
-const filters = ["All", "Coffee", "Croissants", "Cakes", "Desserts", "Meals"];
-
 export default function Shop() {
-  const { products } = useCms();
-  const [filter, setFilter] = useState("All");
+  const { products, categories } = useCms();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryParam = searchParams.get("category");
+
+  // Filter active categories
+  const activeCategories = categories.filter((c) => c.is_active && !c.is_archived);
+  
+  const matchedCategory = activeCategories.find((c) => c.slug === categoryParam);
+  const filter = matchedCategory ? matchedCategory.name : "All";
+
+  const setFilter = (name: string) => {
+    if (name === "All") {
+      setSearchParams({});
+    } else {
+      const cat = activeCategories.find((c) => c.name === name);
+      if (cat) {
+        setSearchParams({ category: cat.slug });
+      }
+    }
+  };
+
   const filtered = filter === "All" ? products : products.filter((p) => p.category === filter);
+  const filters = ["All", ...activeCategories.map((c) => c.name)];
 
   return (
     <div className="min-h-screen bg-background">
