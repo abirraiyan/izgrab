@@ -18,11 +18,7 @@ export default function AdminLogin() {
     setSubmitting(true);
 
     try {
-      if (import.meta.env.DEV) {
-        console.log("[AdminLogin] Initialising auth query...");
-        console.log("[AdminLogin] Target Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
-        console.log("[AdminLogin] VITE_SUPABASE_PUBLISHABLE_KEY Present:", !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
-      }
+      console.log("[AuthAudit] Login attempt for email:", email.trim());
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -30,19 +26,32 @@ export default function AdminLogin() {
       });
 
       if (error) {
-        if (import.meta.env.DEV) {
-          console.error("[AdminLogin] Auth error returned from Supabase:", error);
+        console.error("[AuthAudit] Supabase Authentication failed:", {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        
+        if (error.message.toLowerCase().includes("confirm")) {
+          toast.error("Login failed: Please confirm your email address in your inbox before logging in.");
+        } else if (error.message.toLowerCase().includes("invalid login credentials")) {
+          toast.error("Login failed: Invalid email or password.");
+        } else {
+          toast.error(`Auth Error: ${error.message}`);
         }
-        toast.error(error.message || "Invalid credentials");
+        
         setSubmitting(false);
         return;
       }
 
       if (!data.session) {
-        toast.error("Login failed: Session not established");
+        console.error("[AuthAudit] Session was not established after login.");
+        toast.error("Login failed: Session not established.");
         setSubmitting(false);
         return;
       }
+
+      console.log("[AuthAudit] Supabase Auth session established. User ID:", data.session.user.id);
 
       // Check if user is in admin_users
       const { data: admin, error: adminError } = await supabase
@@ -52,17 +61,24 @@ export default function AdminLogin() {
         .single();
 
       if (adminError || !admin) {
+        console.error("[AuthAudit] Admin table verification failed:", {
+          error: adminError?.message || "User is not listed in admin_users table",
+          userEmail: data.session.user.email
+        });
+        
         await supabase.auth.signOut();
-        toast.error("Access denied: Not an administrator");
+        toast.error("Access denied: You do not have administrator privileges.");
         setSubmitting(false);
         return;
       }
+
+      console.log("[AuthAudit] Admin verified successfully. Entering admin console.");
 
       // Success
       toast.success("Logged in successfully");
       navigate("/admin");
     } catch (err: any) {
-      console.error("[AdminLogin] Exception during submit handler:", err);
+      console.error("[AuthAudit] Unexpected login handler exception:", err);
       toast.error(err.message || "An unexpected error occurred");
       setSubmitting(false);
     }
