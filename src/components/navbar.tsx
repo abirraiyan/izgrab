@@ -12,6 +12,8 @@ const links = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
+const SHOW_CART_ICON = false;
+
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -94,18 +96,20 @@ export function Navbar() {
           <button className="p-2 hover:text-cocoa transition" aria-label="Search">
             <Search className="w-5 h-5" />
           </button>
-          <button
-            onClick={() => cartStore.setOpen(true)}
-            className="p-2 hover:text-cocoa transition relative"
-            aria-label="Cart"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            {totalQty > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-cocoa text-cocoa-foreground text-[10px] font-medium w-4 h-4 rounded-full flex items-center justify-center">
-                {totalQty}
-              </span>
-            )}
-          </button>
+          {SHOW_CART_ICON && (
+            <button
+              onClick={() => cartStore.setOpen(true)}
+              className="p-2 hover:text-cocoa transition relative"
+              aria-label="Cart"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {totalQty > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-cocoa text-cocoa-foreground text-[10px] font-medium w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalQty}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
