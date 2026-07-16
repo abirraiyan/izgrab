@@ -9,7 +9,7 @@ import { useCms } from "@/lib/cms-store";
 import { cartStore } from "@/lib/cart-store";
 import { SEO } from "@/components/seo";
 import { getCloudinaryUrl } from "@/lib/cloudinary";
-import { DeliveryPartnerButtons } from "@/components/DeliveryPartnerButtons";
+import { DeliveryPartnerButtons } from "@/components/product/DeliveryPartnerButtons";
 
 const ENABLE_CART = false;
 
