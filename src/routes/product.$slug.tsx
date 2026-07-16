@@ -9,6 +9,9 @@ import { useCms } from "@/lib/cms-store";
 import { cartStore } from "@/lib/cart-store";
 import { SEO } from "@/components/seo";
 import { getCloudinaryUrl } from "@/lib/cloudinary";
+import { DeliveryPartnerButtons } from "@/components/DeliveryPartnerButtons";
+
+const ENABLE_CART = false;
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -153,42 +156,53 @@ export default function ProductPage() {
               </div>
             )}
 
-            <div>
-              <p className="text-sm font-medium text-cocoa mb-3">Quantity</p>
-              <div className="inline-flex items-center border border-border rounded-full">
-                <button
-                  onClick={() => setQty(Math.max(1, qty - 1))}
-                  className="p-3 hover:text-cocoa"
-                  aria-label="Decrease"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="px-5 text-base tabular-nums">{qty}</span>
-                <button
-                  onClick={() => setQty(qty + 1)}
-                  className="p-3 hover:text-cocoa"
-                  aria-label="Increase"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+            {ENABLE_CART && (
+              <div>
+                <p className="text-sm font-medium text-cocoa mb-3">Quantity</p>
+                <div className="inline-flex items-center border border-border rounded-full">
+                  <button
+                    onClick={() => setQty(Math.max(1, qty - 1))}
+                    className="p-3 hover:text-cocoa"
+                    aria-label="Decrease"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="px-5 text-base tabular-nums">{qty}</span>
+                  <button
+                    onClick={() => setQty(qty + 1)}
+                    className="p-3 hover:text-cocoa"
+                    aria-label="Increase"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={addToCart}
-              className="flex-1 bg-cocoa text-cocoa-foreground py-4 rounded-full font-medium hover:opacity-90 transition"
-            >
-              Add to basket — ৳{(product.price * qty).toLocaleString()}
-            </button>
-            <button
-              className="px-6 py-4 border border-border rounded-full hover:border-cocoa transition"
-              aria-label="Wishlist"
-            >
-              <Heart className="w-5 h-5" />
-            </button>
-          </div>
+          {ENABLE_CART ? (
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={addToCart}
+                className="flex-1 bg-cocoa text-cocoa-foreground py-4 rounded-full font-medium hover:opacity-90 transition"
+              >
+                Add to basket — ৳{(product.price * qty).toLocaleString()}
+              </button>
+              <button
+                className="px-6 py-4 border border-border rounded-full hover:border-cocoa transition"
+                aria-label="Wishlist"
+              >
+                <Heart className="w-5 h-5" />
+              </button>
+            </div>
+          ) : (
+            <div className="mt-8">
+              <DeliveryPartnerButtons
+                foodpandaUrl={(product as any).foodpandaUrl}
+                foodiUrl={(product as any).foodiUrl}
+              />
+            </div>
+          )}
 
           <div className="mt-8 grid grid-cols-2 gap-3 text-xs">
             <div className="flex items-center gap-2 p-4 bg-cream/60 rounded-2xl">
