@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/product-card";
 import { useCms } from "@/lib/cms-store";
 import { SEO } from "@/components/seo";
 import { getCloudinaryUrl } from "@/lib/cloudinary";
+import { InstagramFeed } from "@/components/instagram/InstagramFeed";
 
 const izCroissant = '{"public_id":"iz-grab/products/gupfdi5jqjnh3mfmmicq","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983353/iz-grab/products/gupfdi5jqjnh3mfmmicq.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
 const izCremeBrulee = '{"public_id":"iz-grab/products/wvdzrvlxuarvt2xe5y9v","secure_url":"https://res.cloudinary.com/djnv9soqm/image/upload/v1782983354/iz-grab/products/wvdzrvlxuarvt2xe5y9v.jpg","resource_type":"image","width":1024,"height":1024,"format":"jpg"}';
@@ -570,29 +571,7 @@ export default function Home() {
             View Profile →
           </a>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          {[izCroissant, izCremeBrulee, izPecanTart, izLatte].map((img, i) => (
-            <a
-              key={i}
-              href={igUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative aspect-square rounded-2xl overflow-hidden group bg-muted"
-            >
-              <img
-                src={getCloudinaryUrl(img, { width: 300, height: 300 })}
-                alt="IZ Patisserie Instagram"
-                loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-cocoa/0 group-hover:bg-cocoa/40 transition flex items-center justify-center">
-                <span className="text-cream text-xs font-medium opacity-0 group-hover:opacity-100 transition tracking-wide">
-                  View on Instagram
-                </span>
-              </div>
-            </a>
-          ))}
-        </div>
+        <InstagramFeed instagramUrl={igUrl} />
       </section>
 
       <Footer />
