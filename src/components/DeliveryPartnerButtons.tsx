@@ -25,6 +25,8 @@ export const DeliveryPartnerButtons: React.FC<DeliveryPartnerButtonsProps> = Rea
   const finalFoodpandaUrl = foodpandaUrl || DELIVERY_LINKS.foodpanda;
   const finalFoodiUrl = foodiUrl || DELIVERY_LINKS.foodi;
 
+  const hasFoodi = !!finalFoodiUrl;
+
   const handleRedirect = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
   };
@@ -33,21 +35,25 @@ export const DeliveryPartnerButtons: React.FC<DeliveryPartnerButtonsProps> = Rea
     <div className="flex flex-col sm:flex-row gap-4 w-full">
       <button
         onClick={() => handleRedirect(finalFoodpandaUrl)}
-        className="flex-1 h-14 rounded-full bg-[#D70F64] hover:bg-[#b00c52] active:bg-[#960a45] text-white flex items-center justify-center gap-3 text-sm font-semibold tracking-wider uppercase transition-all duration-300 hover:scale-[1.02] shadow-soft focus:outline-none focus:ring-2 focus:ring-[#D70F64]/50 focus:ring-offset-2"
+        className={`${
+          hasFoodi ? "flex-1" : "w-full"
+        } h-14 rounded-full bg-[#D70F64] hover:bg-[#b00c52] active:bg-[#960a45] text-white flex items-center justify-center gap-3 text-sm font-semibold tracking-wider uppercase transition-all duration-300 hover:scale-[1.02] shadow-soft focus:outline-none focus:ring-2 focus:ring-[#D70F64]/50 focus:ring-offset-2`}
         aria-label="Order this dessert on Foodpanda"
       >
         <FoodpandaIcon />
         <span>Order on Foodpanda</span>
       </button>
 
-      <button
-        onClick={() => handleRedirect(finalFoodiUrl)}
-        className="flex-1 h-14 rounded-full bg-[#FF6B00] hover:bg-[#d95b00] active:bg-[#b84d00] text-white flex items-center justify-center gap-3 text-sm font-semibold tracking-wider uppercase transition-all duration-300 hover:scale-[1.02] shadow-soft focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50 focus:ring-offset-2"
-        aria-label="Order this dessert on Foodi"
-      >
-        <FoodiIcon />
-        <span>Order on Foodi</span>
-      </button>
+      {hasFoodi && (
+        <button
+          onClick={() => handleRedirect(finalFoodiUrl)}
+          className="flex-1 h-14 rounded-full bg-[#FF6B00] hover:bg-[#d95b00] active:bg-[#b84d00] text-white flex items-center justify-center gap-3 text-sm font-semibold tracking-wider uppercase transition-all duration-300 hover:scale-[1.02] shadow-soft focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50 focus:ring-offset-2"
+          aria-label="Order this dessert on Foodi"
+        >
+          <FoodiIcon />
+          <span>Order on Foodi</span>
+        </button>
+      )}
     </div>
   );
 });
